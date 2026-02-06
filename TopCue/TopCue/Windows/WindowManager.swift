@@ -46,6 +46,11 @@ final class WindowManager {
         }
     }
 
+    @MainActor
+    deinit {
+        removeObservers()
+    }
+
     // MARK: - Actions
 
     /// Ouvre la fenetre du prompteur avec le script donne.
@@ -237,8 +242,48 @@ final class WindowManager {
         guard !floatingPanelFrameStorage.isEmpty else { return nil }
 
         let frame = NSRectFromString(floatingPanelFrameStorage)
-        guard frame.width > 0, frame.height > 0 else { return nil }
-        return frame
+        return normalizedFloatingFrame(frame)
+    }
+
+    private func normalizedFloatingFrame(_ frame: CGRect) -> CGRect? {
+        guard frame.width > 0,
+              frame.height > 0,
+              let screen = bestScreen(for: frame) else {
+            return nil
+        }
+
+        let visibleFrame = screen.visibleFrame
+        let width = min(frame.width, visibleFrame.width)
+        let height = min(frame.height, visibleFrame.height)
+
+        let x = min(max(frame.origin.x, visibleFrame.minX), visibleFrame.maxX - width)
+        let y = min(max(frame.origin.y, visibleFrame.minY), visibleFrame.maxY - height)
+
+        return CGRect(x: x, y: y, width: width, height: height)
+    }
+
+    private func bestScreen(for frame: CGRect) -> NSScreen? {
+        let frameCenter = CGPoint(x: frame.midX, y: frame.midY)
+        if let centeredScreen = NSScreen.screens.first(where: { $0.visibleFrame.contains(frameCenter) }) {
+            return centeredScreen
+        }
+
+        let bestIntersectingScreen = NSScreen.screens
+            .map { ($0, intersectionArea(between: $0.visibleFrame, and: frame)) }
+            .max(by: { $0.1 < $1.1 })
+
+        if let bestIntersectingScreen,
+           bestIntersectingScreen.1 > 0 {
+            return bestIntersectingScreen.0
+        }
+
+        return NSScreen.main ?? targetScreen() ?? NSScreen.screens.first
+    }
+
+    private func intersectionArea(between firstRect: CGRect, and secondRect: CGRect) -> CGFloat {
+        let intersection = firstRect.intersection(secondRect)
+        guard !intersection.isNull else { return 0 }
+        return intersection.width * intersection.height
     }
 
     // MARK: - Notifications
