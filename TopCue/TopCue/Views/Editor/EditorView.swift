@@ -172,7 +172,7 @@ private struct EmptyEditorView: View {
         .buttonStyle(.plain)
         .onHover { isSettingsHovered = $0 }
         .help("Settings")
-        .popover(isPresented: $isSettingsPresented, arrowEdge: .top) {
+        .sheet(isPresented: $isSettingsPresented) {
             NotionSettingsPopover(
                 state: windowManager.prompterState,
                 voiceDetector: windowManager.voiceDetector,
@@ -357,7 +357,7 @@ struct EditorDetailView: View {
         .buttonStyle(.plain)
         .onHover { isSettingsHovered = $0 }
         .help("Settings")
-        .popover(isPresented: $isSettingsPresented, arrowEdge: .top) {
+        .sheet(isPresented: $isSettingsPresented) {
             NotionSettingsPopover(
                 state: windowManager.prompterState,
                 voiceDetector: windowManager.voiceDetector,

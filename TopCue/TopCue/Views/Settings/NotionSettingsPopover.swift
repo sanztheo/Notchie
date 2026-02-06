@@ -7,10 +7,12 @@
 
 import SwiftUI
 
-/// Panneau de reglages compact inspire du style Notion.
+/// Panneau de reglages style Notion avec configuration directe.
 struct NotionSettingsPopover: View {
 
     // MARK: - Properties
+
+    @Environment(\.dismiss) var dismiss
 
     @Bindable var state: PrompterState
     @Bindable var voiceDetector: VoiceDetector
@@ -19,10 +21,10 @@ struct NotionSettingsPopover: View {
     let onToggleInvisibility: () -> Void
     let onToggleVoiceMode: () -> Void
 
-    @AppStorage("prompterFontSize") private var fontSize: Double = Constants.Prompter.defaultFontSize
-    @AppStorage("textColorHex") private var textColorHex: String = "#FFFFFF"
+    @AppStorage("prompterFontSize") var fontSize: Double = Constants.Prompter.defaultFontSize
+    @AppStorage("textColorHex") var textColorHex: String = "#FFFFFF"
 
-    private let presetColors: [(name: String, hex: String)] = [
+    let presetColors: [(name: String, hex: String)] = [
         ("White", "#FFFFFF"),
         ("Green", "#00FF41"),
         ("Yellow", "#FFFF00"),
@@ -33,328 +35,167 @@ struct NotionSettingsPopover: View {
     // MARK: - Body
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 14) {
-            header
-            previewSection
-            displaySection
-            voiceSection
-            sharingSection
+        HStack(spacing: 0) {
+            sidebar
+            Divider().overlay(NotionTheme.subtleDivider)
+            content
         }
-        .padding(14)
-        .frame(width: 340)
-        .background(NotionTheme.sidebar)
-    }
-
-    // MARK: - Sections
-
-    private var header: some View {
-        HStack {
-            Text("Settings")
-                .font(.system(size: 13, weight: .semibold))
-                .foregroundStyle(NotionTheme.text)
-            Spacer()
-            Image(systemName: "gearshape")
-                .font(.system(size: 12, weight: .medium))
-                .foregroundStyle(NotionTheme.secondaryText)
-        }
-    }
-
-    private var displaySection: some View {
-        sectionCard(title: "Display") {
-            modeButtons
-
-            settingRow(label: "Taille du texte") {
-                Text("\(Int(fontSize)) pt")
-                    .font(.system(size: 12, weight: .medium, design: .monospaced))
-                    .foregroundStyle(NotionTheme.secondaryText)
-            }
-
-            Slider(value: $fontSize, in: 14...72, step: 1)
-                .tint(NotionTheme.accent)
-
-            settingRow(label: "Couleur du texte") {
-                Circle()
-                    .fill(color(forHex: textColorHex))
-                    .frame(width: 10, height: 10)
-            }
-
-            colorPresets
-        }
-    }
-
-    private var previewSection: some View {
-        sectionCard(title: "Apercu") {
-            previewCanvas
-
-            HStack(spacing: 8) {
-                Text("Mise a jour en direct")
-                    .font(.system(size: 10))
-                    .foregroundStyle(NotionTheme.secondaryText)
-
-                Spacer()
-
-                Text(state.isFloatingMode ? "Mode Floating" : "Mode Notch")
-                    .font(.system(size: 10, weight: .medium))
-                    .foregroundStyle(NotionTheme.tertiaryText)
-            }
-        }
-    }
-
-    private var voiceSection: some View {
-        sectionCard(title: "Voice") {
-            Toggle(isOn: voiceModeBinding) {
-                Text("Mode voix")
-                    .font(.system(size: 13, weight: .regular))
-                    .foregroundStyle(NotionTheme.text)
-            }
-            .toggleStyle(.switch)
-
-            settingRow(label: "Sensibilite micro") {
-                Text(sensitivityLabel)
-                    .font(.system(size: 11, weight: .medium))
-                    .foregroundStyle(NotionTheme.secondaryText)
-            }
-
-            Slider(value: $voiceDetector.sensitivity, in: 0...1, step: 0.01)
-                .tint(NotionTheme.accent)
-
-            Text("Tres sensible \u{2190} \u{2192} Peu sensible")
-                .font(.system(size: 10))
-                .foregroundStyle(NotionTheme.tertiaryText)
-        }
-    }
-
-    private var sharingSection: some View {
-        sectionCard(title: "Sharing") {
-            Toggle(isOn: invisibilityBinding) {
-                Text("Invisible pendant le partage")
-                    .font(.system(size: 13, weight: .regular))
-                    .foregroundStyle(NotionTheme.text)
-            }
-            .toggleStyle(.switch)
-        }
-    }
-
-    // MARK: - Subviews
-
-    private var modeButtons: some View {
-        HStack(spacing: 6) {
-            modeButton(title: "Notch", isSelected: !state.isFloatingMode) {
-                guard state.isFloatingMode else { return }
-                onToggleMode()
-            }
-
-            modeButton(title: "Floating", isSelected: state.isFloatingMode) {
-                guard !state.isFloatingMode else { return }
-                onToggleMode()
-            }
-        }
-    }
-
-    private var colorPresets: some View {
-        HStack(spacing: 6) {
-            ForEach(presetColors, id: \.hex) { preset in
-                Button {
-                    textColorHex = preset.hex
-                } label: {
-                    Circle()
-                        .fill(color(forHex: preset.hex))
-                        .frame(width: 16, height: 16)
-                        .overlay(
-                            Circle()
-                                .stroke(borderColor(for: preset.hex), lineWidth: 1)
-                        )
-                        .overlay {
-                            if textColorHex == preset.hex {
-                                Image(systemName: "checkmark")
-                                    .font(.system(size: 8, weight: .bold))
-                                    .foregroundStyle(checkmarkColor(for: preset.hex))
-                            }
-                        }
-                }
-                .buttonStyle(.plain)
-                .help(preset.name)
-            }
-        }
-    }
-
-    private var previewCanvas: some View {
-        ZStack {
-            Color.black
-
-            VStack(spacing: 0) {
-                if !state.isFloatingMode {
-                    Color.clear.frame(height: 18)
-                }
-
-                Text("TopCue garde vos yeux pres de la camera")
-                    .font(previewFont)
-                    .foregroundStyle(color(forHex: textColorHex))
-                    .multilineTextAlignment(.center)
-                    .lineSpacing(2)
-                    .padding(.horizontal, 14)
-                    .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .center)
-
-                if state.voiceModeEnabled {
-                    VoiceBeamView(audioLevel: previewAudioLevel)
-                        .padding(.bottom, 6)
-                }
-            }
-        }
-        .frame(height: 84)
-        .clipShape(previewShape)
+        .frame(width: 900, height: 560)
+        .background(panelBackground)
+        .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
         .overlay(
-            previewShape
-                .stroke(.white.opacity(0.08), lineWidth: 1)
-        )
-    }
-
-    private func sectionCard<Content: View>(
-        title: String,
-        @ViewBuilder content: () -> Content
-    ) -> some View {
-        VStack(alignment: .leading, spacing: 10) {
-            Text(title)
-                .font(.system(size: 11, weight: .semibold))
-                .foregroundStyle(NotionTheme.secondaryText)
-                .textCase(.uppercase)
-                .tracking(0.4)
-
-            content()
-        }
-        .padding(10)
-        .background(
-            RoundedRectangle(cornerRadius: 8)
-                .fill(NotionTheme.content)
-        )
-        .overlay(
-            RoundedRectangle(cornerRadius: 8)
+            RoundedRectangle(cornerRadius: 14, style: .continuous)
                 .stroke(NotionTheme.subtleDivider, lineWidth: 1)
         )
     }
 
-    private func settingRow<Accessory: View>(
-        label: String,
-        @ViewBuilder accessory: () -> Accessory
-    ) -> some View {
-        HStack(spacing: 8) {
-            Text(label)
-                .font(.system(size: 13))
-                .foregroundStyle(NotionTheme.text)
+    // MARK: - Layout
+
+    private var sidebar: some View {
+        VStack(alignment: .leading, spacing: 14) {
+            Text("Account")
+                .font(.system(size: 11, weight: .semibold))
+                .foregroundStyle(NotionTheme.tertiaryText)
+                .textCase(.uppercase)
+                .tracking(0.3)
+
+            accountRow
+
+            Divider().overlay(NotionTheme.subtleDivider)
+
+            VStack(spacing: 3) {
+                sidebarRow(icon: "slider.horizontal.3", title: "Preferences", isActive: true)
+                sidebarRow(icon: "mic.fill", title: "Voice", isActive: false)
+                sidebarRow(icon: "rectangle.on.rectangle", title: "Sharing", isActive: false)
+                sidebarRow(icon: "eye", title: "Preview", isActive: false)
+            }
 
             Spacer()
-            accessory()
+
+            Text("TopCue")
+                .font(.system(size: 11, weight: .medium))
+                .foregroundStyle(NotionTheme.tertiaryText)
         }
+        .padding(.horizontal, 14)
+        .padding(.vertical, 16)
+        .frame(width: 220)
+        .background(NotionTheme.sidebar)
     }
 
-    private func modeButton(title: String, isSelected: Bool, action: @escaping () -> Void) -> some View {
-        Button(action: action) {
-            Text(title)
-                .font(.system(size: 12, weight: .medium))
-                .foregroundStyle(isSelected ? .white : NotionTheme.secondaryText)
-                .padding(.horizontal, 12)
-                .padding(.vertical, 6)
-                .background(
-                    RoundedRectangle(cornerRadius: 6)
-                        .fill(isSelected ? NotionTheme.accent : NotionTheme.hover)
-                )
+    private var accountRow: some View {
+        HStack(spacing: 10) {
+            Circle()
+                .fill(NotionTheme.accent.opacity(0.22))
+                .frame(width: 26, height: 26)
+                .overlay {
+                    Text("S")
+                        .font(.system(size: 12, weight: .bold))
+                        .foregroundStyle(NotionTheme.accent)
+                }
+
+            VStack(alignment: .leading, spacing: 1) {
+                Text("The Sanz")
+                    .font(.system(size: 12, weight: .semibold))
+                    .foregroundStyle(NotionTheme.text)
+                Text("Workspace")
+                    .font(.system(size: 11))
+                    .foregroundStyle(NotionTheme.tertiaryText)
+            }
+
+            Spacer()
         }
-        .buttonStyle(.plain)
+        .padding(.horizontal, 10)
+        .padding(.vertical, 8)
+        .background(
+            RoundedRectangle(cornerRadius: 8, style: .continuous)
+                .fill(NotionTheme.selected)
+        )
+    }
+
+    private func sidebarRow(icon: String, title: String, isActive: Bool) -> some View {
+        HStack(spacing: 8) {
+            Image(systemName: icon)
+                .font(.system(size: 12, weight: .medium))
+                .frame(width: 16)
+
+            Text(title)
+                .font(.system(size: 13, weight: .medium))
+
+            Spacer(minLength: 0)
+        }
+        .foregroundStyle(isActive ? NotionTheme.text : NotionTheme.secondaryText)
+        .padding(.horizontal, 10)
+        .padding(.vertical, 8)
+        .background(
+            RoundedRectangle(cornerRadius: 8, style: .continuous)
+                .fill(isActive ? NotionTheme.selected : .clear)
+        )
+    }
+
+    private var content: some View {
+        VStack(alignment: .leading, spacing: 0) {
+            contentHeader
+            Divider().overlay(NotionTheme.subtleDivider)
+
+            ScrollView {
+                VStack(alignment: .leading, spacing: 18) {
+                    appearanceBlock
+                    voiceBlock
+                    sharingBlock
+                    previewBlock
+                }
+                .padding(.horizontal, 24)
+                .padding(.vertical, 20)
+                .frame(maxWidth: .infinity, alignment: .leading)
+            }
+        }
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .background(NotionTheme.content)
+    }
+
+    private var contentHeader: some View {
+        HStack(alignment: .top) {
+            VStack(alignment: .leading, spacing: 5) {
+                Text("Preferences")
+                    .font(.system(size: 24, weight: .semibold))
+                    .foregroundStyle(NotionTheme.text)
+
+                Text("Configure TopCue directement depuis ce panneau.")
+                    .font(.system(size: 13))
+                    .foregroundStyle(NotionTheme.secondaryText)
+            }
+
+            Spacer(minLength: 12)
+
+            Button(action: { dismiss() }) {
+                Image(systemName: "xmark")
+                    .font(.system(size: 10, weight: .bold))
+                    .foregroundStyle(NotionTheme.secondaryText)
+                    .frame(width: 24, height: 24)
+                    .background(
+                        Circle()
+                            .fill(NotionTheme.hover)
+                    )
+            }
+            .buttonStyle(.plain)
+            .help("Fermer")
+        }
+        .padding(.horizontal, 24)
+        .padding(.vertical, 16)
     }
 
     // MARK: - Computed
 
-    private var voiceModeBinding: Binding<Bool> {
-        Binding(
-            get: { state.voiceModeEnabled },
-            set: { newValue in
-                guard newValue != state.voiceModeEnabled else { return }
-                onToggleVoiceMode()
-            }
-        )
-    }
-
-    private var invisibilityBinding: Binding<Bool> {
-        Binding(
-            get: { state.isInvisible },
-            set: { newValue in
-                guard newValue != state.isInvisible else { return }
-                onToggleInvisibility()
-            }
-        )
-    }
-
-    private var sensitivityLabel: String {
-        switch voiceDetector.sensitivity {
-        case 0..<0.33:
-            return "Elevee"
-        case 0.33..<0.66:
-            return "Moyenne"
-        default:
-            return "Faible"
-        }
-    }
-
-    private var previewFont: Font {
-        let size = min(max(fontSize * 0.55, 12), 24)
-        return .system(size: size, weight: .medium, design: .monospaced)
-    }
-
-    private var previewAudioLevel: Float {
-        guard state.voiceModeEnabled else { return 0 }
-        let level = 0.25 + ((1 - voiceDetector.sensitivity) * 0.6)
-        return Float(min(max(level, 0), 1))
-    }
-
-    private var previewShape: AnyShape {
-        if state.isFloatingMode {
-            return AnyShape(RoundedRectangle(cornerRadius: Constants.Floating.cornerRadius, style: .continuous))
-        }
-
-        return AnyShape(
-            NotchShape(
-                topCornerRadius: Constants.Notch.topCornerRadius,
-                bottomCornerRadius: Constants.Notch.bottomCornerRadius
-            )
-        )
-    }
-
-    // MARK: - Color Helpers
-
-    private func borderColor(for hex: String) -> Color {
-        if textColorHex == hex {
-            return NotionTheme.accent
-        }
-
-        return NotionTheme.subtleDivider
-    }
-
-    private func checkmarkColor(for hex: String) -> Color {
-        if hex == "#FFFFFF" || hex == "#FFFF00" {
-            return .black.opacity(0.75)
-        }
-
-        return .white
-    }
-
-    private func color(forHex hex: String) -> Color {
-        var value = hex.trimmingCharacters(in: .whitespacesAndNewlines)
-        value = value.replacingOccurrences(of: "#", with: "")
-
-        guard value.count == 6,
-              let rgb = UInt64(value, radix: 16) else {
-            return .white
-        }
-
-        return Color(
-            red: Double((rgb >> 16) & 0xFF) / 255.0,
-            green: Double((rgb >> 8) & 0xFF) / 255.0,
-            blue: Double(rgb & 0xFF) / 255.0
+    var panelBackground: some View {
+        LinearGradient(
+            colors: [NotionTheme.sidebar, NotionTheme.content],
+            startPoint: .leading,
+            endPoint: .trailing
         )
     }
 }
 
-#Preview {
+#Preview("Notion Settings") {
     let state = PrompterState()
     let detector = VoiceDetector()
 
@@ -365,5 +206,7 @@ struct NotionSettingsPopover: View {
         onToggleInvisibility: { state.toggleInvisibility() },
         onToggleVoiceMode: { state.toggleVoiceMode() }
     )
-    .padding()
+    .padding(24)
+    .background(Color.black)
+    .preferredColorScheme(.dark)
 }
