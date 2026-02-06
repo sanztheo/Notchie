@@ -10,9 +10,10 @@ import SwiftUI
 
 /// Etats possibles du prompteur
 enum PlaybackState {
-    case idle       // Pas de presentation en cours
-    case playing    // Texte en defilement
-    case paused     // Pause manuelle
+    case idle           // Pas de presentation en cours
+    case playing        // Texte en defilement
+    case hoveredPause   // Pause temporaire par survol souris
+    case paused         // Pause manuelle (bouton)
 }
 
 /// Etat observable de la presentation en cours
@@ -40,7 +41,7 @@ final class PrompterState {
     }
 
     var isPaused: Bool {
-        playbackState == .paused
+        playbackState == .paused || playbackState == .hoveredPause
     }
 
     // MARK: - Actions
@@ -53,10 +54,32 @@ final class PrompterState {
         playbackState = .paused
     }
 
+    /// Pause temporaire declenchee par le survol de la souris.
+    /// Mouse enter : si on jouait, passe en hoveredPause.
+    /// Mouse exit  : si on etait en hoveredPause, reprend la lecture.
+    func hoverPause() {
+        guard playbackState == .playing else { return }
+        playbackState = .hoveredPause
+    }
+
+    func hoverResume() {
+        guard playbackState == .hoveredPause else { return }
+        playbackState = .playing
+    }
+
+    /// Toggle depuis le bouton de controles.
+    /// Si en hoveredPause (souris au-dessus), un clic passe en pause manuelle
+    /// (pour que le texte reste en pause meme apres le mouse exit).
     func togglePlayPause() {
-        if isPlaying {
+        switch playbackState {
+        case .playing:
             pause()
-        } else {
+        case .hoveredPause:
+            // L'utilisateur clique pause alors qu'il survole : pause manuelle
+            pause()
+        case .paused:
+            play()
+        case .idle:
             play()
         }
     }

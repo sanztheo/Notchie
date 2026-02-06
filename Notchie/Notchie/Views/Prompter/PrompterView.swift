@@ -83,6 +83,12 @@ struct PrompterView: View {
             withAnimation(.easeInOut(duration: 0.2)) {
                 isHovering = hovering
             }
+            // Pause/resume le defilement au survol
+            if hovering {
+                state.hoverPause()
+            } else {
+                state.hoverResume()
+            }
         }
     }
 
