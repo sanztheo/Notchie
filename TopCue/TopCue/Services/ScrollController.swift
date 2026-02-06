@@ -10,11 +10,12 @@ import Combine
 
 /// Controle le defilement automatique du prompteur a 60fps.
 /// Publie l'offset de defilement via un Timer Combine.
+@MainActor
 @Observable
 final class ScrollController {
 
     /// Timer Combine pour le defilement a 60fps
-    private var timerCancellable: (any Cancellable)?
+    private var timerCancellable: AnyCancellable?
 
     /// Reference vers l'etat du prompteur
     private weak var state: PrompterState?
@@ -30,7 +31,7 @@ final class ScrollController {
         self.voiceDetector = voiceDetector
     }
 
-    /// Demarre le timer de defilement
+    /// Demarre le timer de defilement.
     func start() {
         guard timerCancellable == nil else { return }
 
@@ -41,17 +42,18 @@ final class ScrollController {
         )
         .autoconnect()
         .sink { [weak self] _ in
-            self?.tick()
+            guard let self else { return }
+            self.tick()
         }
     }
 
-    /// Arrete le timer de defilement
+    /// Arrete le timer de defilement.
     func stop() {
         timerCancellable?.cancel()
         timerCancellable = nil
     }
 
-    /// Reset le defilement a zero
+    /// Reset le defilement a zero.
     func reset() {
         stop()
         state?.scrollOffset = 0
@@ -83,6 +85,4 @@ final class ScrollController {
         guard velocityFactor > 0 else { return }
         state.scrollOffset += state.speed * Constants.Prompter.frameRate * velocityFactor
     }
-
-    // AnyCancellable se cancel automatiquement a la deallocation
 }

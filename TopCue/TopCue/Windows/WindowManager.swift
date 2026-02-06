@@ -513,4 +513,5 @@ final class WindowManager {
         appObservers.forEach { center.removeObserver($0) }
         appObservers.removeAll()
     }
+
 }
