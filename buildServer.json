@@ -12,8 +12,8 @@
 	"argv": [
 		"/opt/homebrew/bin/xcode-build-server"
 	],
-	"workspace": "/Volumes/Dev/DEV/opensource/Notchie/Notchie/Notchie.xcodeproj/project.xcworkspace",
-	"build_root": "/Users/sanz/Library/Developer/Xcode/DerivedData/Notchie-dxddpcbqspqolramtvridtifbqek",
-	"scheme": "Notchie",
+	"workspace": "/Volumes/Dev/DEV/opensource/TopCue/TopCue/TopCue.xcodeproj/project.xcworkspace",
+	"build_root": "/Users/sanz/Library/Developer/Xcode/DerivedData/TopCue-dxddpcbqspqolramtvridtifbqek",
+	"scheme": "TopCue",
 	"kind": "xcode"
 }

@@ -1,13 +1,13 @@
 //
-//  NotchieUITestsLaunchTests.swift
-//  NotchieUITests
+//  TopCueUITestsLaunchTests.swift
+//  TopCueUITests
 //
 //  Created by Sanz on 06/02/2026.
 //
 
 import XCTest
 
-final class NotchieUITestsLaunchTests: XCTestCase {
+final class TopCueUITestsLaunchTests: XCTestCase {
 
     override class var runsForEachTargetApplicationUIConfiguration: Bool {
         true

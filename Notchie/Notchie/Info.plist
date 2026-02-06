@@ -4,7 +4,7 @@
 <dict>
 	<!-- Acces microphone (obligatoire pour voice activation) -->
 	<key>NSMicrophoneUsageDescription</key>
-	<string>Notchie utilise le microphone pour détecter votre voix et faire défiler le texte automatiquement.</string>
+	<string>TopCue utilise le microphone pour détecter votre voix et faire défiler le texte automatiquement.</string>
 
 	<!-- Pas de safe area compatibility mode (on gere le notch nous-memes) -->
 	<key>NSPrefersDisplaySafeAreaCompatibilityMode</key>

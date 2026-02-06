@@ -1,6 +1,6 @@
 //
-//  NotchieApp.swift
-//  Notchie
+//  TopCueApp.swift
+//  TopCue
 //
 //  Created by Sanz on 06/02/2026.
 //
@@ -9,7 +9,7 @@ import SwiftUI
 import SwiftData
 
 @main
-struct NotchieApp: App {
+struct TopCueApp: App {
 
     @NSApplicationDelegateAdaptor(AppDelegate.self) var appDelegate
 
