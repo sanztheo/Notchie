@@ -25,6 +25,16 @@ enum PrompterMode: String, Equatable {
 /// Etat observable de la presentation en cours
 @Observable
 final class PrompterState {
+
+    private enum StorageKey {
+        static let mode = "prompter.mode"
+        static let speed = "prompter.speed"
+        static let isInvisible = "prompter.isInvisible"
+    }
+
+    @ObservationIgnored
+    private let defaults = UserDefaults.standard
+
     /// Script actuellement presente
     var currentScript: Script?
 
@@ -35,7 +45,7 @@ final class PrompterState {
     var scrollOffset: CGFloat = 0
 
     /// Vitesse de defilement (points par seconde)
-    var speed: CGFloat = 50
+    var speed: CGFloat = Constants.Prompter.defaultSpeed
 
     /// La fenetre du prompteur est-elle visible
     var isWindowVisible: Bool = false
@@ -57,6 +67,10 @@ final class PrompterState {
 
     /// Indique si un notch reel a ete detecte sur un ecran connecte
     var hasDetectedNotch: Bool = false
+
+    init() {
+        restorePreferences()
+    }
 
     // MARK: - Computed
 
@@ -124,22 +138,59 @@ final class PrompterState {
 
     func toggleMode() {
         mode = isFloatingMode ? .notch : .floating
+        persistMode()
     }
 
     func toggleInvisibility() {
         isInvisible.toggle()
+        persistInvisibility()
     }
 
     func increaseSpeed() {
         speed = min(speed + Constants.Prompter.speedStep, Constants.Prompter.maxSpeed)
+        persistSpeed()
     }
 
     func decreaseSpeed() {
         speed = max(speed - Constants.Prompter.speedStep, Constants.Prompter.minSpeed)
+        persistSpeed()
     }
 
     /// Multiplicateur de vitesse affichable (ex: "1.0x")
     var speedMultiplier: String {
         String(format: "%.1fx", speed / 50.0)
+    }
+
+    // MARK: - Persistence
+
+    private func restorePreferences() {
+        if let rawMode = defaults.string(forKey: StorageKey.mode),
+           let storedMode = PrompterMode(rawValue: rawMode) {
+            mode = storedMode
+        }
+
+        if defaults.object(forKey: StorageKey.isInvisible) != nil {
+            isInvisible = defaults.bool(forKey: StorageKey.isInvisible)
+        }
+
+        if let storedSpeed = defaults.object(forKey: StorageKey.speed) as? Double {
+            let clampedSpeed = min(
+                max(storedSpeed, Double(Constants.Prompter.minSpeed)),
+                Double(Constants.Prompter.maxSpeed)
+            )
+            speed = CGFloat(clampedSpeed)
+        }
+    }
+
+    private func persistMode() {
+        defaults.set(mode.rawValue, forKey: StorageKey.mode)
+    }
+
+    private func persistInvisibility() {
+        defaults.set(isInvisible, forKey: StorageKey.isInvisible)
+    }
+
+    private func persistSpeed() {
+        defaults.set(Double(speed), forKey: StorageKey.speed)
     }
 }

@@ -19,8 +19,8 @@ struct TopCueApp: App {
         WindowGroup {
             EditorView(windowManager: windowManager)
                 .frame(
-                    minWidth: Constants.Window.editorSize.width * 0.6,
-                    minHeight: Constants.Window.editorSize.height * 0.5
+                    minWidth: Constants.Window.minSize.width,
+                    minHeight: Constants.Window.minSize.height
                 )
         }
         .modelContainer(for: Script.self)

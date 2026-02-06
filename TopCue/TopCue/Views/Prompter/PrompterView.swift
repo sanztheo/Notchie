@@ -17,6 +17,7 @@ struct PrompterView: View {
     @State private var isHovering = false
     @State private var visibilityBadgeText: String?
     @State private var isVisibilityBadgeVisible = false
+    @State private var hideBadgeTask: DispatchWorkItem?
 
     @AppStorage("prompterFontSize") private var fontSize: Double = Constants.Prompter.defaultFontSize
     @AppStorage("textColorHex") private var textColorHex: String = "#FFFFFF"
@@ -31,6 +32,7 @@ struct PrompterView: View {
             }
             .onDisappear {
                 stopScrolling()
+                hideBadgeTask?.cancel()
             }
             .onChange(of: state.isInvisible) { _, _ in
                 showVisibilityBadge()
@@ -290,17 +292,20 @@ struct PrompterView: View {
     }
 
     private func showVisibilityBadge() {
+        hideBadgeTask?.cancel()
         visibilityBadgeText = state.isInvisible ? "Invisible" : "Visible"
 
         withAnimation(.easeOut(duration: 0.15)) {
             isVisibilityBadgeVisible = true
         }
 
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.9) {
+        let task = DispatchWorkItem {
             withAnimation(.easeIn(duration: 0.2)) {
                 isVisibilityBadgeVisible = false
             }
         }
+        hideBadgeTask = task
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.9, execute: task)
     }
 
     // MARK: - Scrolling
