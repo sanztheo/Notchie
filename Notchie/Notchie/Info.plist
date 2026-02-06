@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<!-- Acces microphone (obligatoire pour voice activation) -->
+	<key>NSMicrophoneUsageDescription</key>
+	<string>Notchie utilise le microphone pour détecter votre voix et faire défiler le texte automatiquement.</string>
+
+	<!-- Pas de safe area compatibility mode (on gere le notch nous-memes) -->
+	<key>NSPrefersDisplaySafeAreaCompatibilityMode</key>
+	<false/>
+</dict>
+</plist>
