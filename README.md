@@ -73,7 +73,7 @@ TopCue places your script **right next to the camera** — inside the MacBook no
 
 ```bash
 # Clone the repository
-git clone https://github.com/YOUR_USERNAME/TopCue.git
+git clone https://github.com/sanztheo/TopCue.git
 cd TopCue
 
 # Open in Xcode

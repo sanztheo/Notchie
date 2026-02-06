@@ -31,8 +31,8 @@ enum Constants {
         /// Taille de police minimum
         static let minFontSize: CGFloat = 14
 
-        /// Taille de police maximum
-        static let maxFontSize: CGFloat = 72
+        /// Taille de police maximum (la zone visible fait ~60pt, limiter a 36pt)
+        static let maxFontSize: CGFloat = 36
 
         /// Espacement entre les lignes
         static let lineSpacing: CGFloat = 12

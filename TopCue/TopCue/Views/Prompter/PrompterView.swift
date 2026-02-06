@@ -42,6 +42,11 @@ struct PrompterView: View {
 
     // MARK: - Notch Content
 
+    /// Inset horizontal safe pour rester dans le NotchShape (topCorner + bottomCorner + marge)
+    private var safeHorizontalPadding: CGFloat {
+        Constants.Notch.topCornerRadius + Constants.Notch.bottomCornerRadius + 8
+    }
+
     /// Le contenu noir qui fusionne avec le notch physique
     private var notchContent: some View {
         ZStack(alignment: .top) {
@@ -54,13 +59,14 @@ struct PrompterView: View {
                         .lineSpacing(4)
                         .lineLimit(nil)
                         .multilineTextAlignment(.center)
-                        .padding(.horizontal, 16)
+                        .padding(.horizontal, safeHorizontalPadding)
                         .padding(.top, Constants.Notch.physicalHeight + 4)
                         .padding(.bottom, 200)
                         .frame(maxWidth: .infinity)
                         .offset(y: -state.scrollOffset)
                 }
                 .scrollDisabled(true)
+                .mask(textFadeMask)
             } else {
                 Text("Aucun script")
                     .font(.caption)
@@ -89,6 +95,38 @@ struct PrompterView: View {
             } else {
                 state.hoverResume()
             }
+        }
+    }
+
+    // MARK: - Text Fade Mask
+
+    /// Masque gradient vertical : le texte apparait sous le notch physique et
+    /// disparait en fondu avant les coins arrondis du bas du NotchShape.
+    /// Empeche les artefacts de clipping aux bords de la forme.
+    private var textFadeMask: some View {
+        VStack(spacing: 0) {
+            // Zone du notch physique — completement masquee (invisible)
+            Color.clear
+                .frame(height: Constants.Notch.physicalHeight)
+
+            // Fondu d'entree du texte
+            LinearGradient(
+                colors: [.clear, .white],
+                startPoint: .top,
+                endPoint: .bottom
+            )
+            .frame(height: 6)
+
+            // Zone visible du texte — entierement opaque
+            Color.white
+
+            // Fondu de sortie — le texte disparait avant les coins arrondis du bas
+            LinearGradient(
+                colors: [.white, .clear],
+                startPoint: .top,
+                endPoint: .bottom
+            )
+            .frame(height: Constants.Notch.bottomCornerRadius + 4)
         }
     }
 
@@ -156,7 +194,7 @@ struct PrompterView: View {
             .foregroundStyle(.white)
             .padding(.vertical, 5)
             .padding(.horizontal, 10)
-            .background(.black.opacity(0.85))
+            .background(.black)
             .clipShape(Capsule())
             .padding(.bottom, 6)
         }
