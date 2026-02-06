@@ -108,3 +108,100 @@ enum Constants {
         static let wordsPerMinute: Double = 150
     }
 }
+
+// MARK: - Notion Theme
+
+/// Couleurs adaptatives fideles au design system Notion.
+/// Light : sidebar #F7F7F5, content #FFFFFF, text #37352F
+/// Dark  : sidebar #252525, content #191919, text white 90%
+enum NotionTheme {
+
+    // MARK: Backgrounds
+
+    /// Sidebar — off-white chaud (light) / gris fonce (dark)
+    static let sidebar = adaptiveColor(
+        light: (0.969, 0.969, 0.961, 1),  // #F7F7F5
+        dark:  (0.145, 0.145, 0.145, 1)   // #252525
+    )
+
+    /// Zone de contenu — blanc pur (light) / quasi-noir (dark)
+    static let content = adaptiveColor(
+        light: (1, 1, 1, 1),              // #FFFFFF
+        dark:  (0.098, 0.098, 0.098, 1)   // #191919
+    )
+
+    // MARK: Text
+
+    /// Texte principal — brun chaud (light) / blanc 90% (dark)
+    static let text = adaptiveColor(
+        light: (0.216, 0.208, 0.184, 1),  // #37352F
+        dark:  (1, 1, 1, 0.9)
+    )
+
+    /// Texte secondaire — gris moyen
+    static let secondaryText = adaptiveColor(
+        light: (0.608, 0.604, 0.592, 1),  // #9B9A97
+        dark:  (0.592, 0.604, 0.608, 0.65)
+    )
+
+    /// Texte tertiaire — gris clair
+    static let tertiaryText = adaptiveColor(
+        light: (0.608, 0.604, 0.592, 0.6),
+        dark:  (0.592, 0.604, 0.608, 0.4)
+    )
+
+    // MARK: Interactive
+
+    /// Fond de survol — noir/blanc a 4%
+    static let hover = adaptiveColor(
+        light: (0, 0, 0, 0.04),
+        dark:  (1, 1, 1, 0.04)
+    )
+
+    /// Fond de selection — noir/blanc a 6%
+    static let selected = adaptiveColor(
+        light: (0, 0, 0, 0.06),
+        dark:  (1, 1, 1, 0.055)
+    )
+
+    // MARK: Dividers
+
+    /// Separateur sidebar/content
+    static let divider = adaptiveColor(
+        light: (0.922, 0.922, 0.918, 1),  // #EBEBEA
+        dark:  (1, 1, 1, 0.06)
+    )
+
+    /// Separateur interne subtil
+    static let subtleDivider = adaptiveColor(
+        light: (0, 0, 0, 0.04),
+        dark:  (1, 1, 1, 0.04)
+    )
+
+    // MARK: Accent
+
+    /// Bleu Notion
+    static let accent = adaptiveColor(
+        light: (0.043, 0.431, 0.6, 1),    // #0B6E99
+        dark:  (0.322, 0.612, 0.792, 1)   // #529CCA
+    )
+
+    /// Orange favori
+    static let orange = adaptiveColor(
+        light: (0.851, 0.451, 0.051, 1),  // #D9730D
+        dark:  (1, 0.639, 0.267, 1)       // #FFA344
+    )
+
+    // MARK: Private
+
+    private static func adaptiveColor(
+        light: (CGFloat, CGFloat, CGFloat, CGFloat),
+        dark: (CGFloat, CGFloat, CGFloat, CGFloat)
+    ) -> Color {
+        Color(nsColor: NSColor(name: nil, dynamicProvider: { appearance in
+            let isDark = appearance.bestMatch(from: [.darkAqua, .aqua]) == .darkAqua
+            let c = isDark ? dark : light
+            return NSColor(srgbRed: c.0, green: c.1, blue: c.2, alpha: c.3)
+        }))
+    }
+}

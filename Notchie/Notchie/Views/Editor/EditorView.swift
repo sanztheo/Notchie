@@ -8,39 +8,64 @@
 import SwiftUI
 import SwiftData
 
-/// Vue principale de l'editeur : sidebar custom + editeur de texte.
-/// Layout HStack pour un controle visuel total, style Notion.
+/// Vue principale de l'editeur : sidebar + editeur de texte.
+/// Layout custom HStack, design system Notion, toggle sidebar Cmd+S.
 struct EditorView: View {
 
     @Environment(\.modelContext) private var modelContext
     @State private var selectedScript: Script?
+    @State private var isSidebarVisible = true
 
     var windowManager: WindowManager
 
     var body: some View {
         HStack(spacing: 0) {
             // Sidebar
-            ScriptListView(selectedScript: $selectedScript)
+            if isSidebarVisible {
+                ScriptListView(
+                    selectedScript: $selectedScript,
+                    isSidebarVisible: $isSidebarVisible
+                )
+                .frame(width: 260)
+                .transition(.move(edge: .leading))
 
-            // Separateur vertical subtil
-            Rectangle()
-                .fill(Color.primary.opacity(0.06))
-                .frame(width: 1)
+                Rectangle()
+                    .fill(NotionTheme.divider)
+                    .frame(width: 1)
+            }
 
             // Detail
             Group {
                 if let selectedScript {
                     EditorDetailView(
                         script: selectedScript,
-                        windowManager: windowManager
+                        windowManager: windowManager,
+                        isSidebarVisible: $isSidebarVisible
                     )
                 } else {
-                    EmptyEditorView(onCreate: createScript)
+                    EmptyEditorView(
+                        isSidebarVisible: $isSidebarVisible,
+                        onCreate: createScript
+                    )
                 }
             }
             .frame(maxWidth: .infinity, maxHeight: .infinity)
         }
-        .background(.background)
+        .background(NotionTheme.content)
+        .overlay {
+            // Cmd+S : toggle sidebar
+            Button("", action: toggleSidebar)
+                .keyboardShortcut("s")
+                .opacity(0)
+                .frame(width: 0, height: 0)
+                .allowsHitTesting(false)
+        }
+    }
+
+    private func toggleSidebar() {
+        withAnimation(.spring(duration: 0.25, bounce: 0)) {
+            isSidebarVisible.toggle()
+        }
     }
 
     private func createScript() {
@@ -54,63 +79,104 @@ struct EditorView: View {
 
 // MARK: - Empty State
 
-/// Etat vide — design minimaliste Notion-like.
+/// Etat vide — minimaliste, couleurs Notion.
 private struct EmptyEditorView: View {
 
+    @Binding var isSidebarVisible: Bool
     var onCreate: () -> Void
     @State private var isButtonHovered = false
 
     var body: some View {
-        VStack(spacing: 20) {
-            Image(systemName: "doc.text")
-                .font(.system(size: 48, weight: .ultraLight))
-                .foregroundStyle(.quaternary)
-
-            VStack(spacing: 6) {
-                Text("Aucun script")
-                    .font(.system(.title3, weight: .medium))
-                    .foregroundStyle(.secondary)
-
-                Text("Selectionnez un script ou creez-en un nouveau.")
-                    .font(.system(.subheadline))
-                    .foregroundStyle(.tertiary)
+        VStack(spacing: 0) {
+            // Top bar avec toggle sidebar
+            HStack {
+                SidebarToggleButton(isSidebarVisible: $isSidebarVisible)
+                Spacer()
             }
+            .padding(.horizontal, 16)
+            .padding(.vertical, 10)
 
-            Button(action: onCreate) {
-                HStack(spacing: 6) {
-                    Image(systemName: "plus")
-                        .font(.system(size: 11, weight: .bold))
-                    Text("Nouveau script")
-                        .font(.system(.subheadline, weight: .medium))
+            Spacer()
+
+            VStack(spacing: 20) {
+                Image(systemName: "doc.text")
+                    .font(.system(size: 48, weight: .ultraLight))
+                    .foregroundStyle(NotionTheme.tertiaryText)
+
+                VStack(spacing: 6) {
+                    Text("Aucun script")
+                        .font(.system(.title3, weight: .medium))
+                        .foregroundStyle(NotionTheme.secondaryText)
+
+                    Text("Selectionnez un script ou creez-en un nouveau.")
+                        .font(.system(.subheadline))
+                        .foregroundStyle(NotionTheme.tertiaryText)
                 }
-                .foregroundStyle(isButtonHovered ? Color.accentColor : .secondary)
-                .padding(.horizontal, 16)
-                .padding(.vertical, 8)
-                .background(
-                    RoundedRectangle(cornerRadius: 8)
-                        .fill(
-                            isButtonHovered
-                                ? Color.accentColor.opacity(0.08)
-                                : Color.primary.opacity(0.04)
-                        )
-                )
+
+                Button(action: onCreate) {
+                    HStack(spacing: 6) {
+                        Image(systemName: "plus")
+                            .font(.system(size: 11, weight: .bold))
+                        Text("Nouveau script")
+                            .font(.system(.subheadline, weight: .medium))
+                    }
+                    .foregroundStyle(
+                        isButtonHovered ? NotionTheme.accent : NotionTheme.secondaryText
+                    )
+                    .padding(.horizontal, 16)
+                    .padding(.vertical, 8)
+                    .background(
+                        RoundedRectangle(cornerRadius: 8)
+                            .fill(isButtonHovered ? NotionTheme.accent.opacity(0.1) : NotionTheme.hover)
+                    )
+                }
+                .buttonStyle(.plain)
+                .onHover { isButtonHovered = $0 }
             }
-            .buttonStyle(.plain)
-            .onHover { isButtonHovered = $0 }
-            .padding(.top, 4)
+
+            Spacer()
         }
-        .frame(maxWidth: .infinity, maxHeight: .infinity)
+    }
+}
+
+// MARK: - Sidebar Toggle Button
+
+/// Bouton toggle sidebar — icone sidebar, hover discret.
+struct SidebarToggleButton: View {
+
+    @Binding var isSidebarVisible: Bool
+    @State private var isHovered = false
+
+    var body: some View {
+        Button {
+            withAnimation(.spring(duration: 0.25, bounce: 0)) {
+                isSidebarVisible.toggle()
+            }
+        } label: {
+            Image(systemName: "sidebar.left")
+                .font(.system(size: 14, weight: .regular))
+                .foregroundStyle(isHovered ? NotionTheme.text : NotionTheme.secondaryText)
+                .frame(width: 28, height: 28)
+                .background(
+                    RoundedRectangle(cornerRadius: 6)
+                        .fill(isHovered ? NotionTheme.hover : .clear)
+                )
+        }
+        .buttonStyle(.plain)
+        .onHover { isHovered = $0 }
+        .help("Afficher/masquer la sidebar (\u{2318}S)")
     }
 }
 
 // MARK: - Editor Detail
 
 /// Vue detail : editeur de texte pour un script individuel.
-/// Design Notion-like : grand titre, metadata discrete, editeur propre.
+/// Design Notion : grand titre, metadata, editeur propre.
 struct EditorDetailView: View {
 
     @Bindable var script: Script
     var windowManager: WindowManager
+    @Binding var isSidebarVisible: Bool
 
     @FocusState private var isTitleFocused: Bool
     @FocusState private var isEditorFocused: Bool
@@ -119,17 +185,18 @@ struct EditorDetailView: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
-            // Top bar — boutons discrets, alignes a droite
+            // Top bar
             topBar
 
-            // Titre — grand, bold, sans bordure
+            // Titre — grand, bold, sans bordure, style Notion
             TextField("Sans titre", text: $script.title)
                 .textFieldStyle(.plain)
                 .font(.system(size: 34, weight: .bold))
+                .foregroundStyle(NotionTheme.text)
                 .focused($isTitleFocused)
                 .onSubmit { isEditorFocused = true }
                 .padding(.horizontal, 52)
-                .padding(.top, 20)
+                .padding(.top, 16)
                 .onChange(of: script.title) {
                     script.modifiedAt = Date()
                 }
@@ -142,13 +209,14 @@ struct EditorDetailView: View {
 
             // Separateur subtil
             Rectangle()
-                .fill(Color.primary.opacity(0.04))
+                .fill(NotionTheme.subtleDivider)
                 .frame(height: 1)
                 .padding(.horizontal, 48)
 
-            // Editeur de texte — remplissage complet
+            // Editeur de texte
             TextEditor(text: $script.content)
                 .font(.system(.body))
+                .foregroundStyle(NotionTheme.text)
                 .lineSpacing(5)
                 .scrollContentBackground(.hidden)
                 .focused($isEditorFocused)
@@ -166,10 +234,13 @@ struct EditorDetailView: View {
     // MARK: - Subviews
 
     private var topBar: some View {
-        HStack(spacing: 12) {
+        HStack(spacing: 8) {
+            // Toggle sidebar
+            SidebarToggleButton(isSidebarVisible: $isSidebarVisible)
+
             Spacer()
 
-            // Favori — etoile discrete
+            // Favori
             Button {
                 withAnimation(.spring(duration: 0.25)) {
                     script.isFavorite.toggle()
@@ -179,17 +250,17 @@ struct EditorDetailView: View {
                     .font(.system(size: 14, weight: .light))
                     .foregroundStyle(
                         script.isFavorite
-                            ? Color.orange
+                            ? NotionTheme.orange
                             : (isFavHovered
-                                ? Color.primary.opacity(0.5)
-                                : Color.primary.opacity(0.15))
+                                ? NotionTheme.text.opacity(0.5)
+                                : NotionTheme.text.opacity(0.15))
                     )
                     .contentTransition(.symbolEffect(.replace))
             }
             .buttonStyle(.plain)
             .onHover { isFavHovered = $0 }
 
-            // Presenter — hover effect bleu
+            // Presenter
             Button {
                 windowManager.showPrompter(script: script)
             } label: {
@@ -199,23 +270,19 @@ struct EditorDetailView: View {
                     Text("Presenter")
                         .font(.system(size: 13, weight: .medium))
                 }
-                .foregroundStyle(isPresentHovered ? .white : .secondary)
+                .foregroundStyle(isPresentHovered ? .white : NotionTheme.secondaryText)
                 .padding(.horizontal, 14)
                 .padding(.vertical, 6)
                 .background(
                     RoundedRectangle(cornerRadius: 7)
-                        .fill(
-                            isPresentHovered
-                                ? Color.accentColor
-                                : Color.primary.opacity(0.04)
-                        )
+                        .fill(isPresentHovered ? NotionTheme.accent : NotionTheme.hover)
                 )
                 .animation(.easeOut(duration: 0.15), value: isPresentHovered)
             }
             .buttonStyle(.plain)
             .onHover { isPresentHovered = $0 }
         }
-        .padding(.horizontal, 20)
+        .padding(.horizontal, 16)
         .padding(.vertical, 10)
     }
 
@@ -228,7 +295,7 @@ struct EditorDetailView: View {
             Text("Modifie \(script.modifiedAt.formatted(.relative(presentation: .named)))")
         }
         .font(.system(size: 12))
-        .foregroundStyle(.tertiary)
+        .foregroundStyle(NotionTheme.tertiaryText)
     }
 
     // MARK: - Helpers

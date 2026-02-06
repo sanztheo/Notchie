@@ -8,14 +8,15 @@
 import SwiftUI
 import SwiftData
 
-/// Sidebar : liste des scripts avec recherche, ajout et suppression.
-/// Design Notion-like : fond propre, hover effects, selection subtile, pas de List.
+/// Sidebar : liste des scripts, design system Notion.
+/// Fond #F7F7F5 (light) / #252525 (dark), selection subtile, hover effects.
 struct ScriptListView: View {
 
     @Environment(\.modelContext) private var modelContext
     @Query(sort: \Script.modifiedAt, order: .reverse) private var scripts: [Script]
 
     @Binding var selectedScript: Script?
+    @Binding var isSidebarVisible: Bool
 
     @State private var searchText = ""
 
@@ -33,16 +34,16 @@ struct ScriptListView: View {
         VStack(spacing: 0) {
             // Header
             sidebarHeader
-                .padding(.horizontal, 16)
+                .padding(.horizontal, 14)
                 .padding(.top, 12)
                 .padding(.bottom, 8)
 
             // Recherche
             SidebarSearchField(text: $searchText)
-                .padding(.horizontal, 12)
+                .padding(.horizontal, 10)
                 .padding(.bottom, 8)
 
-            // Liste des scripts
+            // Liste
             if scripts.isEmpty {
                 emptyList
             } else if filteredScripts.isEmpty {
@@ -51,9 +52,7 @@ struct ScriptListView: View {
                 scriptList
             }
         }
-        .frame(width: 260)
-        .background(Color.primary.opacity(0.02))
-        .background(.background)
+        .background(NotionTheme.sidebar)
     }
 
     // MARK: - Subviews
@@ -61,8 +60,10 @@ struct ScriptListView: View {
     private var sidebarHeader: some View {
         HStack(alignment: .center) {
             Text("Scripts")
-                .font(.system(.headline, weight: .semibold))
-                .foregroundStyle(.primary)
+                .font(.system(size: 12, weight: .semibold))
+                .foregroundStyle(NotionTheme.secondaryText)
+                .textCase(.uppercase)
+                .tracking(0.5)
 
             Spacer()
 
@@ -78,7 +79,7 @@ struct ScriptListView: View {
                         script: script,
                         isSelected: selectedScript?.id == script.id,
                         onSelect: {
-                            withAnimation(.easeOut(duration: 0.12)) {
+                            withAnimation(.easeOut(duration: 0.1)) {
                                 selectedScript = script
                             }
                         },
@@ -91,8 +92,8 @@ struct ScriptListView: View {
                     )
                 }
             }
-            .padding(.horizontal, 8)
-            .padding(.top, 4)
+            .padding(.horizontal, 6)
+            .padding(.top, 2)
             .padding(.bottom, 8)
         }
         .focusable()
@@ -107,24 +108,24 @@ struct ScriptListView: View {
             Spacer()
             Text("Aucun script")
                 .font(.system(.subheadline, weight: .medium))
-                .foregroundStyle(.tertiary)
+                .foregroundStyle(NotionTheme.secondaryText)
             Text("Cliquez + pour commencer")
                 .font(.system(.caption))
-                .foregroundStyle(.quaternary)
+                .foregroundStyle(NotionTheme.tertiaryText)
             Spacer()
         }
         .frame(maxWidth: .infinity)
     }
 
     private var noResults: some View {
-        VStack(spacing: 4) {
+        VStack(spacing: 6) {
             Spacer()
             Image(systemName: "magnifyingglass")
                 .font(.system(size: 20, weight: .ultraLight))
-                .foregroundStyle(.quaternary)
+                .foregroundStyle(NotionTheme.tertiaryText)
             Text("Aucun resultat")
                 .font(.system(.subheadline))
-                .foregroundStyle(.tertiary)
+                .foregroundStyle(NotionTheme.secondaryText)
             Spacer()
         }
         .frame(maxWidth: .infinity)
@@ -159,11 +160,11 @@ struct ScriptListView: View {
         if let current = selectedScript,
            let index = filteredScripts.firstIndex(where: { $0.id == current.id }),
            index < filteredScripts.count - 1 {
-            withAnimation(.easeOut(duration: 0.12)) {
+            withAnimation(.easeOut(duration: 0.1)) {
                 selectedScript = filteredScripts[index + 1]
             }
         } else if selectedScript == nil {
-            withAnimation(.easeOut(duration: 0.12)) {
+            withAnimation(.easeOut(duration: 0.1)) {
                 selectedScript = filteredScripts.first
             }
         }
@@ -174,7 +175,7 @@ struct ScriptListView: View {
         if let current = selectedScript,
            let index = filteredScripts.firstIndex(where: { $0.id == current.id }),
            index > 0 {
-            withAnimation(.easeOut(duration: 0.12)) {
+            withAnimation(.easeOut(duration: 0.1)) {
                 selectedScript = filteredScripts[index - 1]
             }
         }
@@ -183,7 +184,7 @@ struct ScriptListView: View {
 
 // MARK: - Search Field
 
-/// Barre de recherche Notion-like : fond subtil, icone loupe, pas de bordure.
+/// Barre de recherche Notion : fond subtil, loupe, coins arrondis.
 private struct SidebarSearchField: View {
 
     @Binding var text: String
@@ -193,30 +194,31 @@ private struct SidebarSearchField: View {
         HStack(spacing: 6) {
             Image(systemName: "magnifyingglass")
                 .font(.system(size: 12, weight: .medium))
-                .foregroundStyle(.tertiary)
+                .foregroundStyle(NotionTheme.tertiaryText)
 
             TextField("Rechercher\u{2026}", text: $text)
                 .textFieldStyle(.plain)
-                .font(.system(.subheadline))
+                .font(.system(size: 13))
+                .foregroundStyle(NotionTheme.text)
                 .focused($isFocused)
 
             if !text.isEmpty {
                 Button {
-                    text = ""
+                    withAnimation(.easeOut(duration: 0.15)) { text = "" }
                 } label: {
                     Image(systemName: "xmark.circle.fill")
                         .font(.system(size: 11))
-                        .foregroundStyle(.tertiary)
+                        .foregroundStyle(NotionTheme.secondaryText)
                 }
                 .buttonStyle(.plain)
                 .transition(.opacity.combined(with: .scale(scale: 0.8)))
             }
         }
         .padding(.horizontal, 10)
-        .padding(.vertical, 6)
+        .padding(.vertical, 5)
         .background(
             RoundedRectangle(cornerRadius: 6)
-                .fill(Color.primary.opacity(isFocused ? 0.06 : 0.04))
+                .fill(isFocused ? NotionTheme.selected : NotionTheme.hover)
         )
         .animation(.easeOut(duration: 0.15), value: isFocused)
     }
@@ -224,7 +226,7 @@ private struct SidebarSearchField: View {
 
 // MARK: - Add Button
 
-/// Bouton + discret, rond, avec hover effect.
+/// Bouton + Notion : discret, hover effect.
 private struct SidebarAddButton: View {
 
     var action: () -> Void
@@ -233,12 +235,12 @@ private struct SidebarAddButton: View {
     var body: some View {
         Button(action: action) {
             Image(systemName: "plus")
-                .font(.system(size: 13, weight: .medium))
-                .foregroundStyle(isHovered ? .primary : .tertiary)
+                .font(.system(size: 14, weight: .medium))
+                .foregroundStyle(isHovered ? NotionTheme.text : NotionTheme.secondaryText)
                 .frame(width: 24, height: 24)
                 .background(
                     RoundedRectangle(cornerRadius: 6)
-                        .fill(isHovered ? Color.primary.opacity(0.06) : .clear)
+                        .fill(isHovered ? NotionTheme.hover : .clear)
                 )
         }
         .buttonStyle(.plain)
@@ -248,7 +250,7 @@ private struct SidebarAddButton: View {
 
 // MARK: - Script Row
 
-/// Ligne de script — style Notion : titre medium, metadata caption, etoile au hover.
+/// Ligne de script Notion : titre medium, metadata caption, etoile au hover.
 private struct ScriptRowView: View {
 
     let script: Script
@@ -262,9 +264,9 @@ private struct ScriptRowView: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 3) {
             HStack(spacing: 6) {
-                Text(script.title.isEmpty ? "Sans titre" : script.title)
-                    .font(.system(.body, weight: .medium))
-                    .foregroundStyle(script.title.isEmpty ? .tertiary : .primary)
+                Text(displayTitle)
+                    .font(.system(size: 14, weight: .medium))
+                    .foregroundStyle(script.title.isEmpty ? NotionTheme.tertiaryText : NotionTheme.text)
                     .lineLimit(1)
 
                 Spacer(minLength: 4)
@@ -274,8 +276,8 @@ private struct ScriptRowView: View {
                         .font(.system(size: 10))
                         .foregroundStyle(
                             script.isFavorite
-                                ? Color.orange
-                                : Color.primary.opacity(0.15)
+                                ? NotionTheme.orange
+                                : NotionTheme.tertiaryText
                         )
                         .transition(.opacity.combined(with: .scale(scale: 0.8)))
                 }
@@ -286,20 +288,20 @@ private struct ScriptRowView: View {
                 Text("\u{00B7}")
                 Text(script.formattedDuration)
             }
-            .font(.system(.caption))
-            .foregroundStyle(.tertiary)
+            .font(.system(size: 11))
+            .foregroundStyle(NotionTheme.tertiaryText)
         }
         .padding(.horizontal, 10)
-        .padding(.vertical, 7)
+        .padding(.vertical, 6)
         .frame(maxWidth: .infinity, alignment: .leading)
         .background(
-            RoundedRectangle(cornerRadius: 7)
+            RoundedRectangle(cornerRadius: 6)
                 .fill(rowBackground)
         )
-        .contentShape(RoundedRectangle(cornerRadius: 7))
+        .contentShape(RoundedRectangle(cornerRadius: 6))
         .onTapGesture(perform: onSelect)
         .onHover { hovering in
-            withAnimation(.easeInOut(duration: 0.12)) {
+            withAnimation(.easeInOut(duration: 0.1)) {
                 isHovered = hovering
             }
         }
@@ -312,9 +314,7 @@ private struct ScriptRowView: View {
                     systemImage: script.isFavorite ? "star.slash" : "star"
                 )
             }
-
             Divider()
-
             Button(role: .destructive) {
                 onDelete()
             } label: {
@@ -323,11 +323,15 @@ private struct ScriptRowView: View {
         }
     }
 
+    private var displayTitle: String {
+        script.title.isEmpty ? "Sans titre" : script.title
+    }
+
     private var rowBackground: Color {
         if isSelected {
-            return Color.primary.opacity(0.08)
+            return NotionTheme.selected
         } else if isHovered {
-            return Color.primary.opacity(0.04)
+            return NotionTheme.hover
         }
         return .clear
     }
