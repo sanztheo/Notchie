@@ -8,8 +8,8 @@
 import SwiftUI
 import SwiftData
 
-/// Vue principale de l'editeur : sidebar (liste) + editeur de texte.
-/// Contient le bouton "Presenter" pour ouvrir le prompteur.
+/// Vue principale de l'editeur : sidebar custom + editeur de texte.
+/// Layout HStack pour un controle visuel total, style Notion.
 struct EditorView: View {
 
     @Environment(\.modelContext) private var modelContext
@@ -18,18 +18,29 @@ struct EditorView: View {
     var windowManager: WindowManager
 
     var body: some View {
-        NavigationSplitView {
+        HStack(spacing: 0) {
+            // Sidebar
             ScriptListView(selectedScript: $selectedScript)
-        } detail: {
-            if let selectedScript {
-                EditorDetailView(
-                    script: selectedScript,
-                    windowManager: windowManager
-                )
-            } else {
-                EmptyEditorView(onCreate: createScript)
+
+            // Separateur vertical subtil
+            Rectangle()
+                .fill(Color.primary.opacity(0.06))
+                .frame(width: 1)
+
+            // Detail
+            Group {
+                if let selectedScript {
+                    EditorDetailView(
+                        script: selectedScript,
+                        windowManager: windowManager
+                    )
+                } else {
+                    EmptyEditorView(onCreate: createScript)
+                }
             }
+            .frame(maxWidth: .infinity, maxHeight: .infinity)
         }
+        .background(.background)
     }
 
     private func createScript() {
@@ -52,7 +63,7 @@ private struct EmptyEditorView: View {
     var body: some View {
         VStack(spacing: 20) {
             Image(systemName: "doc.text")
-                .font(.system(size: 56, weight: .ultraLight))
+                .font(.system(size: 48, weight: .ultraLight))
                 .foregroundStyle(.quaternary)
 
             VStack(spacing: 6) {
@@ -68,7 +79,7 @@ private struct EmptyEditorView: View {
             Button(action: onCreate) {
                 HStack(spacing: 6) {
                     Image(systemName: "plus")
-                        .font(.system(size: 12, weight: .bold))
+                        .font(.system(size: 11, weight: .bold))
                     Text("Nouveau script")
                         .font(.system(.subheadline, weight: .medium))
                 }
@@ -86,9 +97,9 @@ private struct EmptyEditorView: View {
             }
             .buttonStyle(.plain)
             .onHover { isButtonHovered = $0 }
+            .padding(.top, 4)
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
-        .background(.background)
     }
 }
 
@@ -148,8 +159,6 @@ struct EditorDetailView: View {
                 }
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
-        .background(.background)
-        .navigationTitle("")
         .onAppear { updateFocus() }
         .onChange(of: script.id) { updateFocus() }
     }
@@ -171,7 +180,9 @@ struct EditorDetailView: View {
                     .foregroundStyle(
                         script.isFavorite
                             ? Color.orange
-                            : (isFavHovered ? Color.primary.opacity(0.5) : Color.primary.opacity(0.15))
+                            : (isFavHovered
+                                ? Color.primary.opacity(0.5)
+                                : Color.primary.opacity(0.15))
                     )
                     .contentTransition(.symbolEffect(.replace))
             }

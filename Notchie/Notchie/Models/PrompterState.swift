@@ -84,6 +84,11 @@ final class PrompterState {
         }
     }
 
+    /// Recommence le defilement depuis le debut sans arreter la presentation
+    func restart() {
+        scrollOffset = 0
+    }
+
     func stop() {
         playbackState = .idle
         scrollOffset = 0

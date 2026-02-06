@@ -49,7 +49,7 @@ struct PrompterView: View {
             if let script = state.currentScript {
                 ScrollView(.vertical, showsIndicators: false) {
                     Text(script.content)
-                        .font(.system(size: 13, weight: .medium, design: .monospaced))
+                        .font(.system(size: fontSize, weight: .medium, design: .monospaced))
                         .foregroundStyle(textColor)
                         .lineSpacing(4)
                         .lineLimit(nil)
@@ -97,36 +97,87 @@ struct PrompterView: View {
     private var controlsOverlay: some View {
         VStack {
             Spacer()
-            HStack(spacing: 12) {
-                Button { state.decreaseSpeed() } label: {
-                    Image(systemName: "minus.circle.fill").font(.body)
+            HStack(spacing: 6) {
+
+                // --- Recommencer ---
+                Button { state.restart() } label: {
+                    Image(systemName: "backward.end.fill")
+                        .font(.caption)
                 }
                 .buttonStyle(.plain)
+                .help("Recommencer")
 
+                // --- Play / Pause ---
                 Button { state.togglePlayPause() } label: {
-                    Image(systemName: state.isPlaying ? "pause.circle.fill" : "play.circle.fill")
-                        .font(.title3)
+                    Image(systemName: state.isPlaying ? "pause.fill" : "play.fill")
+                        .font(.caption)
                 }
                 .buttonStyle(.plain)
 
-                Button { state.increaseSpeed() } label: {
-                    Image(systemName: "plus.circle.fill").font(.body)
+                controlDivider
+
+                // --- Vitesse : tortue / lievre ---
+                Button { state.decreaseSpeed() } label: {
+                    Image(systemName: "tortoise.fill")
+                        .font(.caption2)
                 }
                 .buttonStyle(.plain)
+                .help("Ralentir")
 
                 Text(state.speedMultiplier)
-                    .font(.caption2)
+                    .font(.system(size: 9, weight: .medium, design: .monospaced))
                     .monospacedDigit()
                     .foregroundStyle(.secondary)
+
+                Button { state.increaseSpeed() } label: {
+                    Image(systemName: "hare.fill")
+                        .font(.caption2)
+                }
+                .buttonStyle(.plain)
+                .help("Accelerer")
+
+                controlDivider
+
+                // --- Zoom texte ---
+                Button { zoomOut() } label: {
+                    Image(systemName: "textformat.size.smaller")
+                        .font(.caption2)
+                }
+                .buttonStyle(.plain)
+                .help("Reduire le texte")
+
+                Button { zoomIn() } label: {
+                    Image(systemName: "textformat.size.larger")
+                        .font(.caption2)
+                }
+                .buttonStyle(.plain)
+                .help("Agrandir le texte")
             }
             .foregroundStyle(.white)
-            .padding(.vertical, 6)
-            .padding(.horizontal, 12)
+            .padding(.vertical, 5)
+            .padding(.horizontal, 10)
             .background(.black.opacity(0.85))
             .clipShape(Capsule())
             .padding(.bottom, 6)
         }
         .transition(.opacity)
+    }
+
+    /// Separateur visuel entre groupes de controles
+    private var controlDivider: some View {
+        Rectangle()
+            .fill(.white.opacity(0.25))
+            .frame(width: 1, height: 12)
+    }
+
+    // MARK: - Zoom
+
+    private func zoomIn() {
+        fontSize = min(fontSize + 2, Constants.Prompter.maxFontSize)
+    }
+
+    private func zoomOut() {
+        fontSize = max(fontSize - 2, Constants.Prompter.minFontSize)
     }
 
     // MARK: - Helpers
