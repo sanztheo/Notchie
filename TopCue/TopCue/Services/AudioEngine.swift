@@ -37,6 +37,7 @@ final class AudioEngine {
         let inputNode = engine.inputNode
         let inputFormat = inputNode.inputFormat(forBus: 0)
         let levelHandler = onLevel
+        let levelBoost = Constants.Voice.inputLevelBoost
 
         guard inputFormat.channelCount > 0 else {
             throw AudioEngineError.microphoneUnavailable
@@ -50,7 +51,7 @@ final class AudioEngine {
             bufferSize: AVAudioFrameCount(Constants.Voice.bufferSize),
             format: tapFormat
         ) { buffer, _ in
-            let level = Self.computeRmsLevel(from: buffer)
+            let level = Self.computeRmsLevel(from: buffer, levelBoost: levelBoost)
             Self.emit(level: level, to: levelHandler)
         }
 
@@ -87,37 +88,159 @@ final class AudioEngine {
         return inputFormat
     }
 
-    nonisolated private static func computeRmsLevel(from buffer: AVAudioPCMBuffer) -> Float {
-        guard let channels = buffer.floatChannelData else { return 0 }
-
+    nonisolated private static func computeRmsLevel(
+        from buffer: AVAudioPCMBuffer,
+        levelBoost: Float
+    ) -> Float {
         let frameLength = Int(buffer.frameLength)
-        guard frameLength > 0 else { return 0 }
-
         let channelCount = Int(buffer.format.channelCount)
-        guard channelCount > 0 else { return 0 }
 
-        var squaredSum: Float = 0
+        guard frameLength > 0, channelCount > 0 else { return 0 }
 
-        for frameIndex in 0..<frameLength {
-            var monoSample: Float = 0
-
-            for channelIndex in 0..<channelCount {
-                monoSample += channels[channelIndex][frameIndex]
-            }
-
-            monoSample /= Float(channelCount)
-            squaredSum += monoSample * monoSample
+        if let channels = buffer.floatChannelData {
+            let rms = rmsFromFloatBuffer(
+                channels: channels,
+                frameLength: frameLength,
+                channelCount: channelCount,
+                isInterleaved: buffer.format.isInterleaved
+            )
+            return min(max(rms * levelBoost, 0), 1)
         }
 
-        let mean = squaredSum / Float(frameLength)
-        let rms = sqrt(mean)
-        return min(max(rms, 0), 1)
+        if let channels = buffer.int16ChannelData {
+            let rms = rmsFromInt16Buffer(
+                channels: channels,
+                frameLength: frameLength,
+                channelCount: channelCount,
+                isInterleaved: buffer.format.isInterleaved
+            )
+            return min(max(rms * levelBoost, 0), 1)
+        }
+
+        if let channels = buffer.int32ChannelData {
+            let rms = rmsFromInt32Buffer(
+                channels: channels,
+                frameLength: frameLength,
+                channelCount: channelCount,
+                isInterleaved: buffer.format.isInterleaved
+            )
+            return min(max(rms * levelBoost, 0), 1)
+        }
+
+        return 0
     }
 
     nonisolated private static func emit(level: Float, to handler: LevelHandler?) {
         guard let handler else { return }
         let clampedLevel = min(max(level, 0), 1)
         handler(clampedLevel)
+    }
+
+    nonisolated private static func rmsFromFloatBuffer(
+        channels: UnsafePointer<UnsafeMutablePointer<Float>>,
+        frameLength: Int,
+        channelCount: Int,
+        isInterleaved: Bool
+    ) -> Float {
+        var squaredSum: Float = 0
+        let sampleCount: Int
+
+        if isInterleaved {
+            let totalSamples = frameLength * channelCount
+            let channelData = channels[0]
+
+            for index in 0..<totalSamples {
+                let sample = channelData[index]
+                squaredSum += sample * sample
+            }
+
+            sampleCount = totalSamples
+        } else {
+            for channelIndex in 0..<channelCount {
+                let channelData = channels[channelIndex]
+                for frameIndex in 0..<frameLength {
+                    let sample = channelData[frameIndex]
+                    squaredSum += sample * sample
+                }
+            }
+
+            sampleCount = frameLength * channelCount
+        }
+
+        guard sampleCount > 0 else { return 0 }
+        return sqrt(squaredSum / Float(sampleCount))
+    }
+
+    nonisolated private static func rmsFromInt16Buffer(
+        channels: UnsafePointer<UnsafeMutablePointer<Int16>>,
+        frameLength: Int,
+        channelCount: Int,
+        isInterleaved: Bool
+    ) -> Float {
+        var squaredSum: Float = 0
+        let sampleCount: Int
+        let normalization: Float = 32768
+
+        if isInterleaved {
+            let totalSamples = frameLength * channelCount
+            let channelData = channels[0]
+
+            for index in 0..<totalSamples {
+                let sample = Float(channelData[index]) / normalization
+                squaredSum += sample * sample
+            }
+
+            sampleCount = totalSamples
+        } else {
+            for channelIndex in 0..<channelCount {
+                let channelData = channels[channelIndex]
+                for frameIndex in 0..<frameLength {
+                    let sample = Float(channelData[frameIndex]) / normalization
+                    squaredSum += sample * sample
+                }
+            }
+
+            sampleCount = frameLength * channelCount
+        }
+
+        guard sampleCount > 0 else { return 0 }
+        return sqrt(squaredSum / Float(sampleCount))
+    }
+
+    nonisolated private static func rmsFromInt32Buffer(
+        channels: UnsafePointer<UnsafeMutablePointer<Int32>>,
+        frameLength: Int,
+        channelCount: Int,
+        isInterleaved: Bool
+    ) -> Float {
+        var squaredSum: Float = 0
+        let sampleCount: Int
+        let normalization: Float = 2147483648
+
+        if isInterleaved {
+            let totalSamples = frameLength * channelCount
+            let channelData = channels[0]
+
+            for index in 0..<totalSamples {
+                let sample = Float(channelData[index]) / normalization
+                squaredSum += sample * sample
+            }
+
+            sampleCount = totalSamples
+        } else {
+            for channelIndex in 0..<channelCount {
+                let channelData = channels[channelIndex]
+                for frameIndex in 0..<frameLength {
+                    let sample = Float(channelData[frameIndex]) / normalization
+                    squaredSum += sample * sample
+                }
+            }
+
+            sampleCount = frameLength * channelCount
+        }
+
+        guard sampleCount > 0 else { return 0 }
+        return sqrt(squaredSum / Float(sampleCount))
     }
 }
 

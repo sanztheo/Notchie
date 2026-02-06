@@ -56,11 +56,14 @@ enum Constants {
         /// Sensibilite par defaut (0.0 = tres sensible, 1.0 = peu sensible)
         static let defaultSensitivity: Double = 0.5
 
-        /// Borne basse du seuil RMS
-        static let thresholdMin: Double = 0.01
+        /// Borne basse du seuil RMS (micro sensible)
+        static let thresholdMin: Double = 0.003
 
         /// Amplitude du seuil RMS selon la sensibilite
-        static let thresholdRange: Double = 0.09
+        static let thresholdRange: Double = 0.022
+
+        /// Gain applique au RMS brut pour compenser les micros faibles.
+        static let inputLevelBoost: Float = 1.8
 
         /// Delai sans voix avant retour en silence (secondes)
         static let silenceDebounce: TimeInterval = 0.3

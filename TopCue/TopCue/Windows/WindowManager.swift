@@ -184,6 +184,7 @@ final class WindowManager {
         do {
             try audioEngine.start()
             prompterState.setVoiceModeEnabled(true)
+            prompterState.play()
             voiceDetector.setMicrophonePermissionMessage(nil)
         } catch {
             prompterState.setVoiceModeEnabled(false)
