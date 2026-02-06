@@ -10,8 +10,7 @@ import Combine
 
 /// Controle le defilement automatique du prompteur a 60fps.
 /// Publie l'offset de defilement via un Timer Combine.
-@MainActor
-@Observable
+nonisolated @Observable
 final class ScrollController {
 
     /// Timer Combine pour le defilement a 60fps

@@ -22,8 +22,8 @@ enum PrompterMode: String, Equatable {
     case floating
 }
 
-/// Etat observable de la presentation en cours
-@Observable
+/// Etat observable de la presentation en cours.
+nonisolated @Observable
 final class PrompterState {
 
     private enum StorageKey {

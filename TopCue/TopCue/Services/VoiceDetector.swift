@@ -14,8 +14,7 @@ enum VoiceActivityState: Equatable {
 }
 
 /// Transforme les niveaux RMS en etat vocal et metadonnees de visualisation.
-@MainActor
-@Observable
+nonisolated @Observable
 final class VoiceDetector {
 
     @ObservationIgnored
