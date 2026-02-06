@@ -25,7 +25,7 @@ Suivi de progression du projet. Chaque tache est marquee : fait, en cours, ou a 
 
 ## Phase 1.5 : Integration Notch ✅
 
-> Intégration visuelle dans le notch MacBook (style boring.notch / Moody)
+> Integration visuelle dans le notch MacBook (style boring.notch / Moody)
 
 | # | Tache | Statut |
 |---|-------|--------|
@@ -38,19 +38,19 @@ Suivi de progression du projet. Chaque tache est marquee : fait, en cours, ou a 
 
 ---
 
-## Phase 1.6 : Design Editeur 🔄
+## Phase 1.6 : Design Editeur ✅
 
 > Redesign de l'editeur de scripts avec un style Notion (pur, minimal, blanc)
 
 | # | Tache | Statut |
 |---|-------|--------|
-| 1.6.1 | Sidebar redesign : fond propre, items sans bordure, selection subtile | 🔲 A faire |
-| 1.6.2 | Titre du script : grand TextField sans bordure (style Notion page title) | 🔲 A faire |
-| 1.6.3 | Metadata sous le titre (mots, duree, date) discrets | 🔲 A faire |
-| 1.6.4 | TextEditor propre sans chrome, police systeme, pleine largeur | 🔲 A faire |
-| 1.6.5 | Bouton Presenter discret (apparait au hover) | 🔲 A faire |
-| 1.6.6 | Etat vide design (pas de script selectionne) | 🔲 A faire |
-| 1.6.7 | Animations hover subtiles | 🔲 A faire |
+| 1.6.1 | Sidebar redesign : fond propre, items sans bordure, selection subtile, hover effects | ✅ Done |
+| 1.6.2 | Titre du script : grand TextField sans bordure (style Notion page title) | ✅ Done |
+| 1.6.3 | Metadata sous le titre (mots, duree, date) discrets | ✅ Done |
+| 1.6.4 | TextEditor propre sans chrome, police systeme, pleine largeur | ✅ Done |
+| 1.6.5 | Bouton Presenter discret (apparait au hover) | ✅ Done |
+| 1.6.6 | Etat vide design (pas de script selectionne) | ✅ Done |
+| 1.6.7 | Animations hover subtiles | 🔄 Partiel — effets de hover basiques presents, animations avancees a affiner |
 
 ---
 
@@ -83,7 +83,7 @@ Suivi de progression du projet. Chaque tache est marquee : fait, en cours, ou a 
 | 3.4 | Integration VoiceDetector <-> ScrollController (speaking = scroll, silence = pause douce) | 🔲 A faire |
 | 3.5 | `VoiceBeamView` - arc/beam anime selon niveau audio | 🔲 A faire |
 | 3.6 | Couleur dynamique selon intensite (bleu -> violet -> rouge) | 🔲 A faire |
-| 3.7 | Pause au hover (mouse enter = pause, mouse exit = resume) | 🔲 A faire |
+| 3.7 | Pause au hover (mouse enter = pause, mouse exit = resume) | ✅ Done |
 | 3.8 | Permission micro - demande au premier lancement | 🔲 A faire |
 
 ---
@@ -96,13 +96,13 @@ Suivi de progression du projet. Chaque tache est marquee : fait, en cours, ou a 
 |---|-------|--------|
 | 4.1 | Countdown Timer overlay (3-2-1-Go avec animation scale+fade) | 🔲 A faire |
 | 4.2 | Duree countdown configurable (3s, 5s, 10s) | 🔲 A faire |
-| 4.3 | Presets couleur texte (blanc, vert matrix, jaune, cyan, rose) | 🔲 A faire |
+| 4.3 | Presets couleur texte (blanc, vert matrix, jaune, cyan, rose) | 🔄 Partiel — constantes definies, pas de UI |
 | 4.4 | ColorPicker custom pour couleur libre | 🔲 A faire |
-| 4.5 | Slider taille texte (14-72pt) + raccourcis Cmd+Plus/Minus | 🔲 A faire |
-| 4.6 | Raccourcis clavier complets (espace, vitesse, taille, invisible, mode) | 🔲 A faire |
+| 4.5 | Slider taille texte (14-72pt) + raccourcis Cmd+Plus/Minus | 🔄 Partiel — zoom in/out dans le prompteur (14-36pt) + persistance @AppStorage, pas de slider dans settings |
+| 4.6 | Raccourcis clavier complets (espace, vitesse, taille, invisible, mode) | 🔄 Partiel — raccourcis play/pause/vitesse presents, raccourcis zoom et mode manquants |
 | 4.7 | `SettingsView` - preferences centralisees | 🔲 A faire |
 | 4.8 | Menu bar icon (NSStatusItem) - acces rapide | 🔲 A faire |
-| 4.9 | Animations et transitions fluides | 🔲 A faire |
+| 4.9 | Animations et transitions fluides | 🔄 Partiel — transitions basiques presentes dans les vues |
 | 4.10 | Gestion erreurs (pas de micro, pas de notch) | 🔲 A faire |
 
 ---
@@ -112,7 +112,7 @@ Suivi de progression du projet. Chaque tache est marquee : fait, en cours, ou a 
 | # | Feature | Statut |
 |---|---------|--------|
 | 5.1 | Import/Export Markdown (.txt, .md) | 🔲 A faire |
-| 5.2 | Themes complets (pas juste la couleur) | 🔲 A faire |
+| 5.2 | Themes complets (pas juste la couleur) | 🔄 Partiel — systeme NotionTheme clair/sombre dans Constants, pas de selecteur |
 | 5.3 | Mode miroir (texte inverse pour teleprompter physique) | 🔲 A faire |
 | 5.4 | Telecommande iPhone (Multipeer Connectivity) | 🔲 A faire |
 | 5.5 | Raccourcis configurables par l'utilisateur | 🔲 A faire |
@@ -128,10 +128,10 @@ Suivi de progression du projet. Chaque tache est marquee : fait, en cours, ou a 
 |-------|--------|-------------|
 | 1 - Core MVP | ✅ Complete | 10/10 |
 | 1.5 - Integration Notch | ✅ Complete | 6/6 |
-| 1.6 - Design Editeur | 🔄 En cours | 0/7 |
+| 1.6 - Design Editeur | ✅ Quasi complete | 6/7 (+1 partiel) |
 | 2 - Notch + Invisible | 🔲 A faire | 0/8 |
-| 3 - Voice Activation | 🔲 A faire | 0/8 |
-| 4 - Polish | 🔲 A faire | 0/10 |
-| 5 - Post-launch | 🔲 A faire | 0/8 |
+| 3 - Voice Activation | 🔄 En cours | 1/8 |
+| 4 - Polish | 🔄 En cours | 0/10 (+4 partiels) |
+| 5 - Post-launch | 🔲 A faire | 0/8 (+1 partiel) |
 
-**Total : 16/57 taches completees**
+**Total : 23/57 taches completees + 6 partielles (~40-50% de progression reelle)**

@@ -152,13 +152,13 @@ TopCue/
 |-------|--------|----------|
 | **1 — Core MVP** | ✅ Complete | 10/10 |
 | **1.5 — Notch Integration** | ✅ Complete | 6/6 |
-| **1.6 — Editor Redesign** | 🔄 In Progress | 0/7 |
+| **1.6 — Editor Redesign** | ✅ Near-complete | 6/7 |
 | **2 — Smart Positioning + Invisibility** | 🔲 Planned | 0/8 |
-| **3 — Voice Activation** | 🔲 Planned | 0/8 |
-| **4 — Polish & Customization** | 🔲 Planned | 0/10 |
-| **5 — Post-launch (v2+)** | 🔲 Planned | 0/8 |
+| **3 — Voice Activation** | 🔄 In Progress | 1/8 |
+| **4 — Polish & Customization** | 🔄 In Progress | ~4/10 |
+| **5 — Post-launch (v2+)** | 🔲 Planned | ~1/8 |
 
-**Overall: 16/57 tasks completed (~28%)**
+**Overall: ~23/57 tasks completed + 6 partial (~45%)**
 
 See the full [roadmap](docs/roadmap.md) for detailed task tracking.
 
