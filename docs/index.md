@@ -10,6 +10,7 @@ Clone open-source de [Moody](https://moody.mjarosz.com/).
 
 | Document | Description |
 |----------|-------------|
+| [roadmap.md](./roadmap.md) | **Roadmap** - suivi de progression tache par tache |
 | [architecture.md](./architecture.md) | Choix technologique, structure projet, stack |
 | [features.md](./features.md) | Toutes les 12 features detaillees |
 | [macos-apis.md](./macos-apis.md) | APIs macOS cles avec exemples de code Swift |
