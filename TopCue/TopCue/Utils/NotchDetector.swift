@@ -24,8 +24,11 @@ extension NSScreen {
     var notchRect: CGRect? {
         guard hasNotch else { return nil }
 
-        let leftArea = auxiliaryTopLeftArea
-        let rightArea = auxiliaryTopRightArea
+        guard let leftArea = auxiliaryTopLeftArea,
+              let rightArea = auxiliaryTopRightArea else {
+            return nil
+        }
+
         let notchMinX = leftArea.maxX
         let notchMaxX = rightArea.minX
         let width = notchMaxX - notchMinX

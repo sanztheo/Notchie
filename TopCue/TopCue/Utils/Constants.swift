@@ -88,8 +88,8 @@ enum Constants {
     // MARK: - Window
 
     enum Window {
-        /// Taille minimum de la fenetre prompteur
-        static let minSize = NSSize(width: 480, height: 320)
+        /// Taille minimum de la fenetre editeur
+        static let minSize = NSSize(width: 960, height: 640)
 
         /// Taille par defaut de la fenetre prompteur
         static let defaultSize = NSSize(width: 700, height: 450)

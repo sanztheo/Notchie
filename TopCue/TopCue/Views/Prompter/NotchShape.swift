@@ -19,7 +19,7 @@ struct NotchShape: Shape {
 
     init(
         topCornerRadius: CGFloat = 6,
-        bottomCornerRadius: CGFloat = 14
+        bottomCornerRadius: CGFloat = 12
     ) {
         self.topCornerRadius = topCornerRadius
         self.bottomCornerRadius = bottomCornerRadius

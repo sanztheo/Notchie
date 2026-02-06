@@ -9,7 +9,7 @@ import Foundation
 import SwiftUI
 
 /// Etats possibles du prompteur
-enum PlaybackState {
+enum PlaybackState: Equatable {
     case idle           // Pas de presentation en cours
     case playing        // Texte en defilement
     case hoveredPause   // Pause temporaire par survol souris
@@ -17,7 +17,7 @@ enum PlaybackState {
 }
 
 /// Modes d'affichage disponibles pour le prompteur.
-enum PrompterMode: String {
+enum PrompterMode: String, Equatable {
     case notch
     case floating
 }

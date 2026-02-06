@@ -8,49 +8,83 @@
 import SwiftUI
 
 /// Vue du teleprompter qui s'integre visuellement dans le notch MacBook.
-///
-/// Architecture :
-/// - La fenetre (FloatingPanel) est 100% transparente
-/// - Le contenu est un ZStack noir clippe avec NotchShape
-/// - Le noir du contenu fusionne avec le noir du notch physique
-/// - Effet : le texte semble "sortir" du notch
 struct PrompterView: View {
 
     @Bindable var state: PrompterState
+    let onToggleInvisibility: () -> Void
 
     @State private var scrollController: ScrollController?
     @State private var isHovering = false
+    @State private var visibilityBadgeText: String?
+    @State private var isVisibilityBadgeVisible = false
 
     @AppStorage("prompterFontSize") private var fontSize: Double = Constants.Prompter.defaultFontSize
     @AppStorage("textColorHex") private var textColorHex: String = "#FFFFFF"
 
     var body: some View {
-        // Fond completement transparent (laisse voir le bureau)
         Color.clear
             .overlay(alignment: .top) {
-                notchContent
+                prompterSurface
             }
             .onAppear {
-                let controller = ScrollController(state: state)
-                scrollController = controller
-                controller.start()
+                startScrollingIfNeeded()
             }
             .onDisappear {
-                scrollController?.stop()
+                stopScrolling()
+            }
+            .onChange(of: state.isInvisible) { _, _ in
+                showVisibilityBadge()
             }
     }
 
-    // MARK: - Notch Content
+    // MARK: - Surface
 
-    /// Inset horizontal safe pour rester dans le NotchShape (topCorner + bottomCorner + marge)
-    private var safeHorizontalPadding: CGFloat {
-        Constants.Notch.topCornerRadius + Constants.Notch.bottomCornerRadius + 8
+    private var prompterSurface: some View {
+        ZStack(alignment: .top) {
+            scrollingContent
+
+            if isVisibilityBadgeVisible,
+               let visibilityBadgeText {
+                visibilityBadge(text: visibilityBadgeText)
+            }
+
+            if isHovering {
+                controlsOverlay
+            }
+        }
+        .frame(width: state.panelSize.width, height: state.panelSize.height)
+        .background(.black)
+        .clipShape(surfaceShape)
+        .onHover { isHovered in
+            withAnimation(.easeInOut(duration: 0.2)) {
+                isHovering = isHovered
+            }
+
+            if isHovered {
+                state.hoverPause()
+            } else {
+                state.hoverResume()
+            }
+        }
     }
 
-    /// Le contenu noir qui fusionne avec le notch physique
-    private var notchContent: some View {
+    private var surfaceShape: AnyShape {
+        if state.isFloatingMode {
+            return AnyShape(RoundedRectangle(cornerRadius: Constants.Floating.cornerRadius, style: .continuous))
+        }
+
+        return AnyShape(
+            NotchShape(
+                topCornerRadius: Constants.Notch.topCornerRadius,
+                bottomCornerRadius: Constants.Notch.bottomCornerRadius
+            )
+        )
+    }
+
+    // MARK: - Content
+
+    private var scrollingContent: some View {
         ZStack(alignment: .top) {
-            // Texte defilant - commence juste sous la zone du notch physique
             if let script = state.currentScript {
                 ScrollView(.vertical, showsIndicators: false) {
                     Text(script.content)
@@ -59,8 +93,8 @@ struct PrompterView: View {
                         .lineSpacing(4)
                         .lineLimit(nil)
                         .multilineTextAlignment(.center)
-                        .padding(.horizontal, safeHorizontalPadding)
-                        .padding(.top, Constants.Notch.physicalHeight + 4)
+                        .padding(.horizontal, horizontalTextPadding)
+                        .padding(.top, textTopInset)
                         .padding(.bottom, 200)
                         .frame(maxWidth: .infinity)
                         .offset(y: -state.scrollOffset)
@@ -71,125 +105,81 @@ struct PrompterView: View {
                 Text("Aucun script")
                     .font(.caption)
                     .foregroundStyle(.gray)
-                    .padding(.top, Constants.Notch.physicalHeight + 8)
-            }
-
-            // Controles compacts au hover
-            if isHovering {
-                controlsOverlay
-            }
-        }
-        .frame(
-            width: Constants.Notch.openWidth,
-            height: Constants.Notch.openHeight
-        )
-        .background(.black)
-        .clipShape(NotchShape())
-        .onHover { hovering in
-            withAnimation(.easeInOut(duration: 0.2)) {
-                isHovering = hovering
-            }
-            // Pause/resume le defilement au survol
-            if hovering {
-                state.hoverPause()
-            } else {
-                state.hoverResume()
+                    .padding(.top, textTopInset)
             }
         }
     }
 
-    // MARK: - Text Fade Mask
+    private var horizontalTextPadding: CGFloat {
+        if state.isFloatingMode {
+            return 20
+        }
 
-    /// Masque gradient vertical : le texte apparait sous le notch physique et
-    /// disparait en fondu avant les coins arrondis du bas du NotchShape.
-    /// Empeche les artefacts de clipping aux bords de la forme.
+        return Constants.Notch.topCornerRadius + Constants.Notch.bottomCornerRadius + 8
+    }
+
+    private var textTopInset: CGFloat {
+        if state.isFloatingMode {
+            return 14
+        }
+
+        return state.detectedNotchHeight + 4
+    }
+
     private var textFadeMask: some View {
-        VStack(spacing: 0) {
-            // Zone du notch physique — completement masquee (invisible)
-            Color.clear
-                .frame(height: Constants.Notch.physicalHeight)
+        Group {
+            if state.isFloatingMode {
+                Color.white
+            } else {
+                VStack(spacing: 0) {
+                    Color.clear
+                        .frame(height: state.detectedNotchHeight)
 
-            // Fondu d'entree du texte
-            LinearGradient(
-                colors: [.clear, .white],
-                startPoint: .top,
-                endPoint: .bottom
-            )
-            .frame(height: 6)
+                    LinearGradient(
+                        colors: [.clear, .white],
+                        startPoint: .top,
+                        endPoint: .bottom
+                    )
+                    .frame(height: 6)
 
-            // Zone visible du texte — entierement opaque
-            Color.white
+                    Color.white
 
-            // Fondu de sortie — le texte disparait avant les coins arrondis du bas
-            LinearGradient(
-                colors: [.white, .clear],
-                startPoint: .top,
-                endPoint: .bottom
-            )
-            .frame(height: Constants.Notch.bottomCornerRadius + 4)
+                    LinearGradient(
+                        colors: [.white, .clear],
+                        startPoint: .top,
+                        endPoint: .bottom
+                    )
+                    .frame(height: Constants.Notch.bottomCornerRadius + 4)
+                }
+            }
         }
     }
 
-    // MARK: - Controls Overlay
+    // MARK: - Controls
 
     private var controlsOverlay: some View {
-        VStack {
+        VStack(spacing: 4) {
+            if shouldShowNoNotchHint {
+                Text("Notch non detecte")
+                    .font(.system(size: 9, weight: .medium))
+                    .foregroundStyle(.white.opacity(0.75))
+                    .padding(.horizontal, 8)
+                    .padding(.vertical, 3)
+                    .background(.black.opacity(0.7))
+                    .clipShape(Capsule())
+            }
+
             Spacer()
+
             HStack(spacing: 6) {
-
-                // --- Recommencer ---
-                Button { state.restart() } label: {
-                    Image(systemName: "backward.end.fill")
-                        .font(.caption)
-                }
-                .buttonStyle(.plain)
-                .help("Recommencer")
-
-                // --- Play / Pause ---
-                Button { state.togglePlayPause() } label: {
-                    Image(systemName: state.isPlaying ? "pause.fill" : "play.fill")
-                        .font(.caption)
-                }
-                .buttonStyle(.plain)
-
+                restartButton
+                playPauseButton
                 controlDivider
-
-                // --- Vitesse : tortue / lievre ---
-                Button { state.decreaseSpeed() } label: {
-                    Image(systemName: "tortoise.fill")
-                        .font(.caption2)
-                }
-                .buttonStyle(.plain)
-                .help("Ralentir")
-
-                Text(state.speedMultiplier)
-                    .font(.system(size: 9, weight: .medium, design: .monospaced))
-                    .monospacedDigit()
-                    .foregroundStyle(.secondary)
-
-                Button { state.increaseSpeed() } label: {
-                    Image(systemName: "hare.fill")
-                        .font(.caption2)
-                }
-                .buttonStyle(.plain)
-                .help("Accelerer")
-
+                speedControls
                 controlDivider
-
-                // --- Zoom texte ---
-                Button { zoomOut() } label: {
-                    Image(systemName: "textformat.size.smaller")
-                        .font(.caption2)
-                }
-                .buttonStyle(.plain)
-                .help("Reduire le texte")
-
-                Button { zoomIn() } label: {
-                    Image(systemName: "textformat.size.larger")
-                        .font(.caption2)
-                }
-                .buttonStyle(.plain)
-                .help("Agrandir le texte")
+                zoomControls
+                controlDivider
+                visibilityButton
             }
             .foregroundStyle(.white)
             .padding(.vertical, 5)
@@ -201,11 +191,128 @@ struct PrompterView: View {
         .transition(.opacity)
     }
 
-    /// Separateur visuel entre groupes de controles
+    private var shouldShowNoNotchHint: Bool {
+        !state.hasDetectedNotch && !state.isFloatingMode
+    }
+
+    private var restartButton: some View {
+        Button { state.restart() } label: {
+            Image(systemName: "backward.end.fill")
+                .font(.caption)
+        }
+        .buttonStyle(.plain)
+        .help("Recommencer")
+    }
+
+    private var playPauseButton: some View {
+        Button { state.togglePlayPause() } label: {
+            Image(systemName: state.isPlaying ? "pause.fill" : "play.fill")
+                .font(.caption)
+        }
+        .buttonStyle(.plain)
+        .help("Lecture / pause")
+    }
+
+    private var speedControls: some View {
+        HStack(spacing: 6) {
+            Button { state.decreaseSpeed() } label: {
+                Image(systemName: "tortoise.fill")
+                    .font(.caption2)
+            }
+            .buttonStyle(.plain)
+            .help("Ralentir")
+
+            Text(state.speedMultiplier)
+                .font(.system(size: 9, weight: .medium, design: .monospaced))
+                .monospacedDigit()
+                .foregroundStyle(.secondary)
+
+            Button { state.increaseSpeed() } label: {
+                Image(systemName: "hare.fill")
+                    .font(.caption2)
+            }
+            .buttonStyle(.plain)
+            .help("Accelerer")
+        }
+    }
+
+    private var zoomControls: some View {
+        HStack(spacing: 6) {
+            Button { zoomOut() } label: {
+                Image(systemName: "textformat.size.smaller")
+                    .font(.caption2)
+            }
+            .buttonStyle(.plain)
+            .help("Reduire le texte")
+
+            Button { zoomIn() } label: {
+                Image(systemName: "textformat.size.larger")
+                    .font(.caption2)
+            }
+            .buttonStyle(.plain)
+            .help("Agrandir le texte")
+        }
+    }
+
+    private var visibilityButton: some View {
+        Button {
+            onToggleInvisibility()
+        } label: {
+            Image(systemName: state.isInvisible ? "lock.fill" : "lock.open.fill")
+                .font(.caption2)
+        }
+        .buttonStyle(.plain)
+        .help(state.isInvisible ? "Invisible au partage" : "Visible au partage")
+    }
+
     private var controlDivider: some View {
         Rectangle()
             .fill(.white.opacity(0.25))
             .frame(width: 1, height: 12)
+    }
+
+    // MARK: - Badge
+
+    private func visibilityBadge(text: String) -> some View {
+        Text(text)
+            .font(.system(size: 11, weight: .semibold))
+            .foregroundStyle(.white)
+            .padding(.horizontal, 10)
+            .padding(.vertical, 4)
+            .background(.black.opacity(0.8))
+            .overlay(
+                Capsule()
+                    .stroke(.white.opacity(0.35), lineWidth: 1)
+            )
+            .clipShape(Capsule())
+            .padding(.top, state.isFloatingMode ? 8 : state.detectedNotchHeight + 6)
+            .transition(.opacity)
+    }
+
+    private func showVisibilityBadge() {
+        visibilityBadgeText = state.isInvisible ? "Invisible" : "Visible"
+
+        withAnimation(.easeOut(duration: 0.15)) {
+            isVisibilityBadgeVisible = true
+        }
+
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.9) {
+            withAnimation(.easeIn(duration: 0.2)) {
+                isVisibilityBadgeVisible = false
+            }
+        }
+    }
+
+    // MARK: - Scrolling
+
+    private func startScrollingIfNeeded() {
+        let controller = ScrollController(state: state)
+        scrollController = controller
+        controller.start()
+    }
+
+    private func stopScrolling() {
+        scrollController?.stop()
     }
 
     // MARK: - Zoom

@@ -46,6 +46,26 @@ struct TopCueApp: App {
 
                 Divider()
 
+                Button(
+                    windowManager.prompterState.isFloatingMode
+                        ? "Mode Notch"
+                        : "Mode Flottant"
+                ) {
+                    windowManager.toggleMode()
+                }
+                .keyboardShortcut("p", modifiers: [.command, .shift])
+
+                Button(
+                    windowManager.prompterState.isInvisible
+                        ? "Rendre visible au partage"
+                        : "Rendre invisible au partage"
+                ) {
+                    windowManager.toggleInvisibility()
+                }
+                .keyboardShortcut("i", modifiers: [.command, .shift])
+
+                Divider()
+
                 Button("Fermer prompteur") {
                     windowManager.hidePrompter()
                 }
