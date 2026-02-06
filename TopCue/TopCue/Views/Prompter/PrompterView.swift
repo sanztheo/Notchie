@@ -85,6 +85,12 @@ struct PrompterView: View {
 
     // MARK: - Content
 
+    /// Offset arrondi au pixel le plus proche pour eviter le rendu sub-pixel
+    /// qui cree un effet de "code barre" sur le texte.
+    private var snappedScrollOffset: CGFloat {
+        round(state.scrollOffset)
+    }
+
     private var scrollingContent: some View {
         ZStack(alignment: .top) {
             if let script = state.currentScript {
@@ -99,9 +105,10 @@ struct PrompterView: View {
                         .padding(.top, textTopInset)
                         .padding(.bottom, 200)
                         .frame(maxWidth: .infinity)
-                        .offset(y: -state.scrollOffset)
+                        .offset(y: -snappedScrollOffset)
                 }
                 .scrollDisabled(true)
+                .drawingGroup()
                 .mask(textFadeMask)
             } else {
                 Text("Aucun script")
@@ -142,7 +149,7 @@ struct PrompterView: View {
                         startPoint: .top,
                         endPoint: .bottom
                     )
-                    .frame(height: 6)
+                    .frame(height: 16)
 
                     Color.white
 

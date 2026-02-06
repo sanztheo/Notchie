@@ -54,20 +54,20 @@ Suivi de progression du projet. Chaque tache est marquee : fait, en cours, ou a 
 
 ---
 
-## Phase 2 : Positionnement intelligent + Invisibilite
+## Phase 2 : Positionnement intelligent + Invisibilite ✅
 
 > Detection dynamique du notch, mode floating, invisibilite screen sharing
 
 | # | Tache | Statut |
 |---|-------|--------|
-| 2.1 | `NotchDetector` - detection notch via safeAreaInsets + auxiliaryTopLeftArea | 🔲 A faire |
-| 2.2 | Calcul dynamique de la largeur du notch (varie selon modele MacBook) | 🔲 A faire |
-| 2.3 | Mode Notch vs Mode Floating (toggle) | 🔲 A faire |
-| 2.4 | Position sauvegardee en mode floating (@AppStorage) | 🔲 A faire |
-| 2.5 | `window.sharingType = .none` + window level assistive tech | 🔲 A faire |
-| 2.6 | Toggle visible/invisible avec indicateur visuel | 🔲 A faire |
-| 2.7 | Support multi-ecran (detecter l'ecran avec notch) | 🔲 A faire |
-| 2.8 | Fallback Macs sans notch (position sous menu bar) | 🔲 A faire |
+| 2.1 | `NotchDetector` - detection notch via safeAreaInsets + auxiliaryTopLeftArea | ✅ Done |
+| 2.2 | Calcul dynamique de la largeur du notch (varie selon modele MacBook) | ✅ Done |
+| 2.3 | Mode Notch vs Mode Floating (toggle) | ✅ Done |
+| 2.4 | Position sauvegardee en mode floating (@AppStorage) | 🔄 Partiel — persistance active via `UserDefaults` (`CGRect` encode en string) |
+| 2.5 | `window.sharingType = .none` + window level assistive tech | ✅ Done |
+| 2.6 | Toggle visible/invisible avec indicateur visuel | ✅ Done |
+| 2.7 | Support multi-ecran (detecter l'ecran avec notch) | ✅ Done |
+| 2.8 | Fallback Macs sans notch (position sous menu bar) | ✅ Done |
 
 ---
 
@@ -129,9 +129,9 @@ Suivi de progression du projet. Chaque tache est marquee : fait, en cours, ou a 
 | 1 - Core MVP | ✅ Complete | 10/10 |
 | 1.5 - Integration Notch | ✅ Complete | 6/6 |
 | 1.6 - Design Editeur | ✅ Quasi complete | 6/7 (+1 partiel) |
-| 2 - Notch + Invisible | 🔲 A faire | 0/8 |
+| 2 - Notch + Invisible | ✅ Quasi complete | 7/8 (+1 partiel) |
 | 3 - Voice Activation | 🔄 En cours | 1/8 |
 | 4 - Polish | 🔄 En cours | 0/10 (+4 partiels) |
 | 5 - Post-launch | 🔲 A faire | 0/8 (+1 partiel) |
 
-**Total : 23/57 taches completees + 6 partielles (~40-50% de progression reelle)**
+**Total : 30/57 taches completees + 7 partielles (~55-65% de progression reelle)**
